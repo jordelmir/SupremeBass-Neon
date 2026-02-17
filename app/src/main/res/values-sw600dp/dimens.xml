@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Large screens (sw600dp and above - tablets) -->
+    <dimen name="knob_size">320dp</dimen>
+    <dimen name="gain_text_size">72sp</dimen>
+    <dimen name="title_text_size">36sp</dimen>
+    <dimen name="switch_text_size">20sp</dimen>
+    <dimen name="preset_button_height">56dp</dimen>
+    <dimen name="preset_text_size">14sp</dimen>
+    <dimen name="warning_text_size">16sp</dimen>
+    <dimen name="main_padding">32dp</dimen>
+</resources>

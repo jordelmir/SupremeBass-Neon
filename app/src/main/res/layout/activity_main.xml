@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent" android:layout_height="match_parent" android:background="@color/black">
+
+    <!-- Matrix Rain Background Effect -->
+    <com.supremecorp.bass.MatrixRainView android:id="@+id/matrix_rain" android:layout_width="match_parent" android:layout_height="match_parent" android:alpha="0.15" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
+
+    <!-- Scrollable Main Content -->
+    <ScrollView android:layout_width="match_parent" android:layout_height="match_parent" android:fillViewport="true" app:layout_constraintTop_toTopOf="parent" app:layout_constraintBottom_toBottomOf="parent">
+
+        <androidx.constraintlayout.widget.ConstraintLayout android:layout_width="match_parent" android:minHeight="@dimen/preset_button_height" android:layout_height="wrap_content" android:padding="@dimen/main_padding">
+
+
+
+            <TextView android:id="@+id/title" android:layout_width="wrap_content" android:minHeight="@dimen/preset_button_height" android:layout_height="wrap_content" android:text="SUPREME BASS" android:textColor="@color/neon_cyan" android:textSize="@dimen/title_text_size" android:textStyle="bold" android:letterSpacing="0.1" app:layout_constraintTop_toTopOf="parent" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent" android:layout_marginTop="16dp"/>
+
+            <!-- ACTIVATE HYPER-DRIVE Switch -->
+            <LinearLayout android:id="@+id/switch_container" android:layout_width="match_parent" android:minHeight="@dimen/preset_button_height" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center" android:layout_marginTop="16dp" app:layout_constraintTop_toBottomOf="@id/title" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent">
+
+                <com.google.android.material.switchmaterial.SwitchMaterial android:id="@+id/enableSwitch" android:layout_width="wrap_content" android:minHeight="@dimen/preset_button_height" android:layout_height="wrap_content" android:text="ACTIVATE HYPER-DRIVE  " android:textColor="@color/white" android:textSize="@dimen/switch_text_size"/>
+            </LinearLayout>
+
+            <!-- Knob Container -->
+            <LinearLayout android:id="@+id/knob_container" android:layout_width="@dimen/knob_size" android:layout_height="@dimen/knob_size" android:orientation="vertical" android:gravity="center" android:background="@drawable/bg_glass" app:layout_constraintTop_toBottomOf="@id/switch_container" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent" android:layout_marginTop="16dp">
+
+                <TextView android:id="@+id/gain_text" android:layout_width="wrap_content" android:minHeight="@dimen/preset_button_height" android:layout_height="wrap_content" android:text="100%" android:textColor="@color/white" android:textSize="@dimen/gain_text_size" android:fontFamily="sans-serif-black"/>
+
+                <TextView android:layout_width="wrap_content" android:minHeight="@dimen/preset_button_height" android:layout_height="wrap_content" android:text="BOOST LEVEL" android:textColor="@color/neon_cyan" android:letterSpacing="0.2"/>
+
+            </LinearLayout>
+
+            <SeekBar android:id="@+id/volumeSeekBar" android:layout_width="0dp" android:minHeight="@dimen/preset_button_height" android:layout_height="wrap_content" android:max="200" android:progress="0" android:progressTint="@color/neon_cyan" android:thumbTint="@color/neon_red" android:layout_marginTop="16dp" app:layout_constraintTop_toBottomOf="@id/knob_container" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent"/>
+
+            <LinearLayout android:id="@+id/presets_container" android:layout_width="match_parent" android:minHeight="@dimen/preset_button_height" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginTop="16dp" app:layout_constraintTop_toBottomOf="@id/volumeSeekBar" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent">
+
+                <!-- Row 1: 100%, 125%, 150% -->
+                <LinearLayout android:layout_width="match_parent" android:minHeight="@dimen/preset_button_height" android:layout_height="wrap_content" android:orientation="horizontal" android:weightSum="3" android:layout_marginBottom="4dp">
+
+                    <Button android:id="@+id/btn_100" android:layout_width="0dp" android:minHeight="@dimen/preset_button_height" android:layout_height="wrap_content" android:layout_weight="1" android:text="100%" android:textSize="@dimen/preset_text_size" android:textColor="@color/white" android:backgroundTint="@color/neon_cyan" android:layout_marginEnd="4dp"/>
+
+                    <Button android:id="@+id/btn_125" android:layout_width="0dp" android:minHeight="@dimen/preset_button_height" android:layout_height="wrap_content" android:layout_weight="1" android:text="125%" android:textSize="@dimen/preset_text_size" android:textColor="@color/white" android:backgroundTint="@color/neon_cyan" android:layout_marginEnd="4dp"/>
+
+                    <Button android:id="@+id/btn_150" android:layout_width="0dp" android:minHeight="@dimen/preset_button_height" android:layout_height="wrap_content" android:layout_weight="1" android:text="150%" android:textSize="@dimen/preset_text_size" android:textColor="@color/white" android:backgroundTint="@color/neon_cyan"/>
+
+                </LinearLayout>
+
+                <!-- Row 2: 175%, 200%, 225% -->
+                <LinearLayout android:layout_width="match_parent" android:minHeight="@dimen/preset_button_height" android:layout_height="wrap_content" android:orientation="horizontal" android:weightSum="3" android:layout_marginBottom="4dp">
+
+                    <Button android:id="@+id/btn_175" android:layout_width="0dp" android:minHeight="@dimen/preset_button_height" android:layout_height="wrap_content" android:layout_weight="1" android:text="175%" android:textSize="@dimen/preset_text_size" android:textColor="@color/black" android:backgroundTint="@color/neon_cyan" android:layout_marginEnd="4dp"/>
+
+                    <Button android:id="@+id/btn_200" android:layout_width="0dp" android:minHeight="@dimen/preset_button_height" android:layout_height="wrap_content" android:layout_weight="1" android:text="200%" android:textSize="@dimen/preset_text_size" android:textColor="@color/black" android:backgroundTint="@android:color/holo_orange_light" android:layout_marginEnd="4dp"/>
+
+                    <Button android:id="@+id/btn_225" android:layout_width="0dp" android:minHeight="@dimen/preset_button_height" android:layout_height="wrap_content" android:layout_weight="1" android:text="225%" android:textSize="@dimen/preset_text_size" android:textColor="@color/black" android:backgroundTint="@android:color/holo_orange_light"/>
+
+                </LinearLayout>
+
+                <!-- Row 3: 250%, 275%, 300% -->
+                <LinearLayout android:layout_width="match_parent" android:minHeight="@dimen/preset_button_height" android:layout_height="wrap_content" android:orientation="horizontal" android:weightSum="3">
+
+                    <Button android:id="@+id/btn_250" android:layout_width="0dp" android:minHeight="@dimen/preset_button_height" android:layout_height="wrap_content" android:layout_weight="1" android:text="250%" android:textSize="@dimen/preset_text_size" android:textColor="@color/white" android:backgroundTint="@color/neon_red" android:layout_marginEnd="4dp"/>
+
+                    <Button android:id="@+id/btn_275" android:layout_width="0dp" android:minHeight="@dimen/preset_button_height" android:layout_height="wrap_content" android:layout_weight="1" android:text="275%" android:textSize="@dimen/preset_text_size" android:textColor="@color/white" android:backgroundTint="@color/neon_red" android:layout_marginEnd="4dp"/>
+
+                    <Button android:id="@+id/btn_300" android:layout_width="0dp" android:minHeight="@dimen/preset_button_height" android:layout_height="wrap_content" android:layout_weight="1" android:text="300%" android:textSize="@dimen/preset_text_size" android:textColor="@color/white" android:backgroundTint="@color/neon_red"/>
+
+                </LinearLayout>
+
+            </LinearLayout>
+
+            <androidx.cardview.widget.CardView android:id="@+id/warning_card" android:layout_width="match_parent" android:layout_height="wrap_content" app:cardBackgroundColor="#220000" app:cardCornerRadius="8dp" android:layout_marginTop="24dp" app:layout_constraintTop_toBottomOf="@id/presets_container" app:layout_constraintStart_toStartOf="parent" app:layout_constraintEnd_toEndOf="parent">
+
+                <TextView android:id="@+id/warning_text" android:layout_width="wrap_content" android:minHeight="@dimen/preset_button_height" android:layout_height="wrap_content" android:text="⚠️ SYSTEM INTEGRITY: SAFE" android:textColor="#00FF00" android:padding="16dp" android:textSize="14sp" android:fontFamily="monospace"/>
+            </androidx.cardview.widget.CardView>
+
+
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </ScrollView>
+
+</androidx.constraintlayout.widget.ConstraintLayout>
