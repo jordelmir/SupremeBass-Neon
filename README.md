@@ -10,6 +10,7 @@ A top-tier, world-class professional audio enhancement engine for Android, featu
 SupremeBass is not just an application; it's a living, breathing sound machine. Engineered for those who demand visual excellence alongside high-performance audio logic.
 
 ### ✨ Key Features
+
 - **Neon UI/UX**: Full futuristic overhaul with phosphorescent colors and smooth micro-animations.
 - **Breathing Interface**: Every element feels alive, with pulsing glows and reactive states.
 - **Intuitive "Motor de Sonido"**: Clear, world-class control system for enabling high-performance audio.
@@ -19,8 +20,9 @@ SupremeBass is not just an application; it's a living, breathing sound machine. 
 
 ## 📥 Downloads
 
-The latest professional build is available directly in the repository:
-- **[SupremeBass_Neon.apk](./SupremeBass_Neon.apk)** - The futuristic stable release.
+The latest professional build is available directly in the official releases:
+
+- **[Download SupremeBass_Neon.apk (v1.0-ELITE)](https://github.com/jordelmir/SupremeBass-Neon/releases/latest)**
 
 ---
 
