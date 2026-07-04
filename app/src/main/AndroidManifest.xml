@@ -6,6 +6,8 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK" />
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <application
         android:allowBackup="true"
@@ -14,6 +16,11 @@
         android:roundIcon="@drawable/ic_bass_logo"
         android:supportsRtl="true"
         android:theme="@style/Theme.SupremeBass">
+
+        <!-- AdMob App ID — Test ID para desarrollo. En producción, reemplaza con tu ID real. -->
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-3940256099942544~3347511713" />
         
         <activity
             android:name=".MainActivity"

@@ -9,18 +9,28 @@ android {
 
     defaultConfig {
         applicationId = "com.supremecorp.bass"
-        minSdk = 26 // Android 8.0 (Good baseline for modern features)
+        minSdk = 26
         targetSdk = 34
         versionCode = 1
-        versionName = "1.0-ELITE"
+        versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    signingConfigs {
+        create("release") {
+            storeFile = file("release-key.jks")
+            storePassword = "supreme2026"
+            keyAlias = "supremebass"
+            keyPassword = "supreme2026"
+        }
+    }
+
     buildTypes {
         release {
-            isMinifyEnabled = true // ProGuard obfuscation for "Black Ops" security
+            isMinifyEnabled = true
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
+            signingConfig = signingConfigs.getByName("release")
         }
     }
     compileOptions {
@@ -49,4 +59,7 @@ dependencies {
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("com.google.android.material:material:1.11.0")
+
+    // Google AdMob
+    implementation("com.google.android.gms:play-services-ads:23.1.0")
 }

@@ -41,33 +41,58 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.viewinterop.AndroidView
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.itemsIndexed
 import com.supremecorp.bass.ui.components.AudioVisualizer
 import com.supremecorp.bass.ui.components.BreathingText
 import com.supremecorp.bass.ui.components.MatrixRain
 import com.supremecorp.bass.ui.components.NeonSwitch
+import com.supremecorp.bass.data.ai.LocalAiTunerRepository
+import com.supremecorp.bass.data.ai.AiSafetyFilter
+import com.supremecorp.bass.domain.model.*
 import com.supremecorp.bass.ui.theme.*
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        AdsManager.initialize(this)
+
+        // Always stop service on fresh launch to ensure clean state
+        // If it was persisted as enabled, we'll restart it below
+        stopService(Intent(this, AudioService::class.java))
+
         setContent {
             TitanTheme {
                 SupremeBassScreen()
             }
         }
     }
+
+    override fun onDestroy() {
+        // Persist current state before destruction
+        super.onDestroy()
+    }
 }
 
 @Composable
 fun SupremeBassScreen() {
     val context = LocalContext.current
-    var isEnabled by remember { mutableStateOf(false) }
-    var gainValue by remember { mutableFloatStateOf(0f) }
+    var isEnabled by remember { mutableStateOf(AudioStatePersistence.isEnabled(context)) }
+    var gainValue by remember { mutableFloatStateOf(AudioStatePersistence.gainValue(context)) }
+    var presetChangeCount by remember { mutableIntStateOf(0) }
 
     val totalVolume = 100 + gainValue.toInt()
 
+    val activity = context as? ComponentActivity
+
+    // Sync service with UI state — always
     LaunchedEffect(isEnabled, gainValue) {
-        if (isEnabled) {
+        // Persist state
+        AudioStatePersistence.saveEnabled(context, isEnabled)
+        AudioStatePersistence.saveGain(context, gainValue)
+
+        if (isEnabled && gainValue > 0) {
             val intent = Intent(context, AudioService::class.java).apply {
                 putExtra("GAIN", gainValue.toInt())
             }
@@ -119,13 +144,18 @@ fun SupremeBassScreen() {
                 }
         )
 
+        // Main content with banner ad fixed at bottom
         Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            modifier = Modifier.fillMaxSize()
         ) {
+            // Scrollable content
+            Column(
+                modifier = Modifier
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp, vertical = 16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
             Spacer(modifier = Modifier.height(32.dp))
 
             // ═══════ TITLE ═══════
@@ -301,10 +331,24 @@ fun SupremeBassScreen() {
                         text = preset.toString(),
                         isSelected = isSelected,
                         glowColor = presetColor,
-                        onClick = { gainValue = presetGain }
+                        onClick = {
+                            gainValue = presetGain
+                            presetChangeCount++
+                            // Show interstitial every 3 preset changes
+                            if (presetChangeCount % 3 == 0 && activity != null) {
+                                AdsManager.showInterstitialIfReady(activity)
+                            }
+                        }
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(20.dp))
+
+            // ═══════ AI TUNER ═══════
+            AiTunerSection(
+                onApplyPreset = { gainValue = it }
+            )
 
             Spacer(modifier = Modifier.height(20.dp))
 
@@ -400,6 +444,18 @@ fun SupremeBassScreen() {
                 )
             )
             Spacer(modifier = Modifier.height(16.dp))
+            }
+
+            // ═══════ BANNER AD — Fixed at bottom ═══════
+            AndroidView(
+                factory = { ctx ->
+                    AdsManager.createBannerAd(ctx)
+                },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)
+                    .background(Color.Black)
+            )
         }
     }
 }
@@ -584,6 +640,269 @@ fun WarningCard(gainValue: Int) {
                     )
                 )
             )
+        }
+    }
+}
+
+// ═══════ AI TUNER SECTION ═══════
+@Composable
+fun AiTunerSection(onApplyPreset: (Float) -> Unit) {
+    val aiRepository = remember { LocalAiTunerRepository() }
+    val safetyFilter = remember { AiSafetyFilter() }
+    
+    var selectedGenre by remember { mutableStateOf(MusicGenre.EDM) }
+    var selectedDevice by remember { mutableStateOf(OutputDevice.HEADPHONES) }
+    var selectedPreference by remember { mutableStateOf(SoundPreference.BALANCED) }
+    var selectedIntensity by remember { mutableStateOf(PresetIntensity.BALANCED) }
+    var aiResult by remember { mutableStateOf<AiPresetResult?>(null) }
+    var showResult by remember { mutableStateOf(false) }
+    
+    val infiniteTransition = rememberInfiniteTransition(label = "ai_tuner")
+    val aiGlow by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 0.8f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "ai_glow"
+    )
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .neonGlass(glowColor = TitanColors.ElectricPurple.copy(alpha = aiGlow * 0.3f))
+            .padding(16.dp)
+    ) {
+        Column {
+            // Header
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = "◈ SUPREME AI TUNER ◈",
+                    style = TextStyle(
+                        fontSize = 11.sp,
+                        fontWeight = FontWeight.Bold,
+                        letterSpacing = 2.sp,
+                        color = TitanColors.ElectricPurple.copy(alpha = aiGlow),
+                        shadow = Shadow(
+                            color = TitanColors.ElectricPurple.copy(alpha = aiGlow * 0.5f),
+                            offset = Offset.Zero,
+                            blurRadius = 8f
+                        )
+                    )
+                )
+                Text(
+                    text = "LOCAL",
+                    style = TextStyle(
+                        fontSize = 8.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = TitanColors.RadioactiveGreen,
+                        letterSpacing = 1.sp
+                    )
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Genre selector
+            Text(text = "Genre", style = TextStyle(fontSize = 9.sp, color = TitanColors.GhostWhite.copy(alpha = 0.5f)))
+            Spacer(modifier = Modifier.height(4.dp))
+            androidx.compose.foundation.lazy.LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                items(MusicGenre.entries.size) { index ->
+                    val genre = MusicGenre.entries[index]
+                    FilterChip(
+                        selected = selectedGenre == genre,
+                        onClick = { selectedGenre = genre },
+                        label = { Text(genre.displayName, fontSize = 9.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = TitanColors.ElectricPurple.copy(alpha = 0.3f),
+                            selectedLabelColor = TitanColors.GhostWhite
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Device selector
+            Text(text = "Output Device", style = TextStyle(fontSize = 9.sp, color = TitanColors.GhostWhite.copy(alpha = 0.5f)))
+            Spacer(modifier = Modifier.height(4.dp))
+            androidx.compose.foundation.lazy.LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                items(OutputDevice.entries.size) { index ->
+                    val device = OutputDevice.entries[index]
+                    FilterChip(
+                        selected = selectedDevice == device,
+                        onClick = { selectedDevice = device },
+                        label = { Text(device.displayName, fontSize = 9.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = TitanColors.NeonCyan.copy(alpha = 0.2f),
+                            selectedLabelColor = TitanColors.GhostWhite
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Preference selector
+            Text(text = "Preference", style = TextStyle(fontSize = 9.sp, color = TitanColors.GhostWhite.copy(alpha = 0.5f)))
+            Spacer(modifier = Modifier.height(4.dp))
+            androidx.compose.foundation.lazy.LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                items(SoundPreference.entries.size) { index ->
+                    val pref = SoundPreference.entries[index]
+                    FilterChip(
+                        selected = selectedPreference == pref,
+                        onClick = { selectedPreference = pref },
+                        label = { Text(pref.displayName, fontSize = 9.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = TitanColors.NeonOrange.copy(alpha = 0.2f),
+                            selectedLabelColor = TitanColors.GhostWhite
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Intensity selector
+            Text(text = "Intensity", style = TextStyle(fontSize = 9.sp, color = TitanColors.GhostWhite.copy(alpha = 0.5f)))
+            Spacer(modifier = Modifier.height(4.dp))
+            Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                PresetIntensity.entries.forEach { intensity ->
+                    FilterChip(
+                        selected = selectedIntensity == intensity,
+                        onClick = { selectedIntensity = intensity },
+                        label = { Text(intensity.displayName, fontSize = 9.sp) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = when (intensity) {
+                                PresetIntensity.SAFE -> TitanColors.RadioactiveGreen.copy(alpha = 0.2f)
+                                PresetIntensity.BALANCED -> TitanColors.NeonCyan.copy(alpha = 0.2f)
+                                PresetIntensity.EXTREME -> TitanColors.NeonRed.copy(alpha = 0.2f)
+                            },
+                            selectedLabelColor = TitanColors.GhostWhite
+                        )
+                    )
+                }
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // Generate button
+            Button(
+                onClick = {
+                    val input = AiPresetInput(
+                        genre = selectedGenre,
+                        outputDevice = selectedDevice,
+                        preference = selectedPreference,
+                        intensity = selectedIntensity
+                    )
+                    val sanitizedInput = safetyFilter.sanitizeInput(input)
+                    val result = aiRepository.generatePreset(sanitizedInput)
+                    aiResult = result
+                    showResult = true
+                },
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = TitanColors.ElectricPurple.copy(alpha = 0.8f)
+                )
+            ) {
+                Text("Generate AI Preset", fontSize = 12.sp, fontWeight = FontWeight.Bold)
+            }
+
+            // Result display
+            if (showResult && aiResult != null) {
+                val result = aiResult!!
+                Spacer(modifier = Modifier.height(12.dp))
+                
+                // Safety warning
+                if (result.safety.level == RiskLevel.HIGH || result.safety.level == RiskLevel.BLOCKED) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clip(RoundedCornerShape(8.dp))
+                            .background(Color(0xFF330000))
+                            .border(1.dp, TitanColors.NeonRed.copy(alpha = 0.5f), RoundedCornerShape(8.dp))
+                            .padding(8.dp)
+                    ) {
+                        Column {
+                            Text(
+                                text = "⚠ SAFETY WARNING",
+                                style = TextStyle(fontSize = 10.sp, fontWeight = FontWeight.Bold, color = TitanColors.NeonRed)
+                            )
+                            result.safety.warnings.forEach { warning ->
+                                Text(text = "• $warning", fontSize = 9.sp, color = TitanColors.GhostWhite.copy(alpha = 0.8f))
+                            }
+                        }
+                    }
+                    Spacer(modifier = Modifier.height(8.dp))
+                }
+
+                // Preset info
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clip(RoundedCornerShape(8.dp))
+                        .background(Color(0xFF0A0A1A))
+                        .border(1.dp, TitanColors.ElectricPurple.copy(alpha = 0.3f), RoundedCornerShape(8.dp))
+                        .padding(12.dp)
+                ) {
+                    Column {
+                        Text(
+                            text = result.preset.name,
+                            style = TextStyle(
+                                fontSize = 14.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = TitanColors.NeonCyan
+                            )
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "Bass: ${result.preset.bassBoost}% | Virtualizer: ${result.preset.virtualizer}% | Loudness: ${result.preset.loudness}%",
+                            fontSize = 10.sp,
+                            color = TitanColors.GhostWhite.copy(alpha = 0.7f)
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = result.explanation,
+                            fontSize = 9.sp,
+                            color = TitanColors.GhostWhite.copy(alpha = 0.5f)
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (result.safety.canApply) {
+                                Button(
+                                    onClick = {
+                                        onApplyPreset(result.preset.bassBoost.toFloat() * 3f)
+                                        showResult = false
+                                    },
+                                    colors = ButtonDefaults.buttonColors(
+                                        containerColor = TitanColors.RadioactiveGreen.copy(alpha = 0.8f)
+                                    ),
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text("Apply", fontSize = 10.sp)
+                                }
+                            }
+                            OutlinedButton(
+                                onClick = { showResult = false },
+                                modifier = Modifier.weight(1f)
+                            ) {
+                                Text("Dismiss", fontSize = 10.sp)
+                            }
+                        }
+                    }
+                }
+            }
         }
     }
 }
