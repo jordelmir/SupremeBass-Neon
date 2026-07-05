@@ -17,10 +17,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SupremeBass">
 
-        <!-- AdMob App ID — Test ID para desarrollo. En producción, reemplaza con tu ID real. -->
+        <!-- AdMob App ID — Production -->
         <meta-data
             android:name="com.google.android.gms.ads.APPLICATION_ID"
-            android:value="ca-app-pub-3940256099942544~3347511713" />
+            android:value="ca-app-pub-9295208787843008~4387075367" />
         
         <activity
             android:name=".MainActivity"

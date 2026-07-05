@@ -20,9 +20,9 @@ import com.google.android.gms.ads.MobileAds
 object AdsManager {
     private const val TAG = "SupremeBass_Ads"
 
-    private const val BANNER_AD_UNIT_ID = "ca-app-pub-3940256099942544/6300978111"
-    private const val INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-3940256099942544/1033173712"
-    private const val REWARDED_AD_UNIT_ID = "ca-app-pub-3940256099942544/5224354917"
+    private const val BANNER_AD_UNIT_ID = "ca-app-pub-9295208787843008/6689805076"
+    private const val INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-9295208787843008/2323184655"
+    private const val REWARDED_AD_UNIT_ID = "ca-app-pub-9295208787843008/6322973561"
 
     fun getBannerAdId(): String = BANNER_AD_UNIT_ID
     fun getInterstitialAdId(): String = INTERSTITIAL_AD_UNIT_ID
