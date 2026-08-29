@@ -65,6 +65,7 @@ android {
     buildFeatures {
         compose = true
         prefab = true
+        buildConfig = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.4"

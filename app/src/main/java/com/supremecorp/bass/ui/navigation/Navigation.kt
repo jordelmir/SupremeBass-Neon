@@ -20,15 +20,23 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.supremecorp.bass.BuildConfig
 import com.supremecorp.bass.ui.theme.TitanColors
 
-enum class Screen(val label: String, val icon: ImageVector) {
+enum class Screen(val label: String, val icon: ImageVector, val isLab: Boolean = false) {
     ENHANCE("Enhance", Icons.Default.VolumeUp),
-    SIGNAL_LAB("Signal Lab", Icons.Default.GraphicEq),
-    DEVICE_LAB("Device Lab", Icons.Default.Memory),
-    EXPERIMENT_LAB("Experiments", Icons.Default.Science),
-    FLAME_LAB("Flame Lab", Icons.Default.LocalFireDepartment),
+    SIGNAL_LAB("Signal Lab", Icons.Default.GraphicEq, isLab = true),
+    DEVICE_LAB("Device Lab", Icons.Default.Memory, isLab = true),
+    EXPERIMENT_LAB("Experiments", Icons.Default.Science, isLab = true),
+    FLAME_LAB("Flame Lab", Icons.Default.LocalFireDepartment, isLab = true),
     SETTINGS("Settings", Icons.Default.Settings)
+}
+
+/** Get visible screens based on build config */
+fun getVisibleScreens(): List<Screen> {
+    return Screen.entries.filter { screen ->
+        !screen.isLab || BuildConfig.DEBUG
+    }
 }
 
 @Composable
@@ -55,6 +63,7 @@ fun SupremeAcousticsNavHost(
         }
 
         // Bottom navigation bar
+        val visibleScreens = getVisibleScreens()
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -63,7 +72,7 @@ fun SupremeAcousticsNavHost(
                 .padding(vertical = 8.dp),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            Screen.entries.forEach { screen ->
+            visibleScreens.forEach { screen ->
                 val isSelected = currentScreen == screen
                 val color = if (isSelected) TitanColors.NeonCyan else Color.Gray
 
