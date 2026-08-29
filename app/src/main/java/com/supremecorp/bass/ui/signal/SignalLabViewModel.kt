@@ -3,8 +3,10 @@ package com.supremecorp.bass.ui.signal
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.supremecorp.bass.audio.input.AudioInputProcessor
 import com.supremecorp.bass.core.logging.AppLogger
 import com.supremecorp.bass.domain.model.*
+import com.supremecorp.bass.dsp.FFT
 import com.supremecorp.bass.dsp.ParametricEQ
 import com.supremecorp.bass.dsp.SweepEngine
 import com.supremecorp.bass.dsp.SweepPlan
@@ -51,6 +53,11 @@ class SignalLabViewModel(application: Application) : AndroidViewModel(applicatio
     private val sweepEngine = SweepEngine()
     private val exporter = TelemetryExporter()
     private var sweepJob: Job? = null
+
+    // Microphone input for spectrum analysis
+    private val audioInputProcessor = AudioInputProcessor(application)
+    private val fft = FFT(1024)
+    private var micJob: Job? = null
 
     fun updateWaveform(waveform: Waveform) {
         _state.value = _state.value.copy(waveform = waveform)
@@ -153,6 +160,65 @@ class SignalLabViewModel(application: Application) : AndroidViewModel(applicatio
         _state.value = _state.value.copy(
             dspState = _state.value.dspState.copy(virtualizerEnabled = enabled)
         )
+    }
+
+    // ── Microphone Input ──
+
+    fun startMicInput() {
+        if (!audioInputProcessor.hasPermission()) {
+            AppLogger.w(TAG, "RECORD_AUDIO permission not granted")
+            return
+        }
+
+        if (audioInputProcessor.isRecording()) return
+
+        audioInputProcessor.onAudioData = { data, samplesRead ->
+            processMicAudio(data, samplesRead)
+        }
+
+        if (audioInputProcessor.start()) {
+            micJob = viewModelScope.launch(Dispatchers.Default) {
+                val buffer = FloatArray(1024)
+                while (audioInputProcessor.isRecording() && isActive) {
+                    audioInputProcessor.read(buffer)
+                }
+            }
+        }
+    }
+
+    fun stopMicInput() {
+        audioInputProcessor.stop()
+        micJob?.cancel()
+        micJob = null
+        _state.value = _state.value.copy(
+            spectrumData = FloatArray(128) { -80f }
+        )
+    }
+
+    private fun processMicAudio(data: FloatArray, samplesRead: Int) {
+        val fftSize = fft.getSize()
+
+        // Apply Hanning window and convert to DoubleArray
+        val real = DoubleArray(fftSize)
+        val imag = DoubleArray(fftSize)
+        for (i in 0 until minOf(samplesRead, fftSize)) {
+            val window = 0.5 * (1.0 - kotlin.math.cos(2.0 * Math.PI * i / (fftSize - 1)))
+            real[i] = data[i].toDouble() * window
+        }
+
+        // Compute FFT
+        fft.forward(real, imag)
+
+        // Compute magnitudes in dB
+        val magnitudes = FloatArray(fftSize / 2) { i ->
+            val re = real[i]
+            val im = imag[i]
+            val mag = kotlin.math.sqrt(re * re + im * im)
+            val db = if (mag > 1e-10) (20.0 * kotlin.math.log10(mag)).toFloat() else -80.0f
+            db.coerceIn(-80.0f, 0.0f)
+        }
+
+        _state.value = _state.value.copy(spectrumData = magnitudes)
     }
 
     fun startSignal() {
@@ -290,6 +356,12 @@ class SignalLabViewModel(application: Application) : AndroidViewModel(applicatio
     override fun onCleared() {
         super.onCleared()
         sweepJob?.cancel()
+        micJob?.cancel()
+        audioInputProcessor.stop()
         signalEngine.release()
+    }
+
+    companion object {
+        private const val TAG = "SignalLabViewModel"
     }
 }

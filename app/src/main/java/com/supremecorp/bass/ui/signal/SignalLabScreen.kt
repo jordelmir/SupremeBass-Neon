@@ -314,6 +314,41 @@ fun SignalLabScreen(
         // ── Real-time Spectrum Analyzer ──
         NeonSectionHeader(text = "SPECTRUM ANALYZER")
         Spacer(modifier = Modifier.height(8.dp))
+
+        // Mic input toggle
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                text = "Microphone Input",
+                style = TextStyle(color = Color.Gray, fontSize = 12.sp)
+            )
+            Button(
+                onClick = {
+                    if (state.spectrumData.all { it == -80f }) {
+                        viewModel.startMicInput()
+                    } else {
+                        viewModel.stopMicInput()
+                    }
+                },
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = if (state.spectrumData.all { it == -80f })
+                        TitanColors.NeonCyan else TitanColors.NeonOrange
+                ),
+                shape = RoundedCornerShape(8.dp)
+            ) {
+                Text(
+                    if (state.spectrumData.all { it == -80f }) "START" else "STOP",
+                    fontSize = 10.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
+        }
+
+        Spacer(modifier = Modifier.height(8.dp))
+
         SpectrumAnalyzer(
             spectrumData = state.spectrumData,
             modifier = Modifier
