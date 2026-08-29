@@ -12,7 +12,7 @@
     <application
         android:allowBackup="true"
         android:icon="@drawable/ic_bass_logo"
-        android:label="Supreme Bass"
+        android:label="@string/app_name"
         android:roundIcon="@drawable/ic_bass_logo"
         android:supportsRtl="true"
         android:theme="@style/Theme.SupremeBass">

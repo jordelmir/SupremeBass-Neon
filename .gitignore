@@ -38,6 +38,13 @@ gradle-wrapper.jar
 *.jks
 *.p12
 *.key
+*.env
+.env*
+keystore.properties
 google-services.json
 firebase-debug.log
 .DS_Store
+
+# Build artifacts
+*.apk
+*.aab

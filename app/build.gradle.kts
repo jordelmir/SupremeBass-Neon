@@ -1,6 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
+    id("com.google.devtools.ksp")
 }
 
 android {
@@ -11,18 +12,39 @@ android {
         applicationId = "com.supremecorp.bass"
         minSdk = 26
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.0.1"
+        versionCode = 3
+        versionName = "1.0.2"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        ndk {
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86", "x86_64")
+        }
+
+        externalNativeBuild {
+            cmake {
+                cppFlags += listOf("-std=c++17", "-O3", "-ffast-math")
+                arguments += listOf("-DANDROID_STL=c++_shared")
+            }
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path = file("src/main/cpp/CMakeLists.txt")
+            version = "3.22.1"
+        }
     }
 
     signingConfigs {
         create("release") {
             storeFile = file("release-key.jks")
-            storePassword = "supreme2026"
-            keyAlias = "supremebass"
-            keyPassword = "supreme2026"
+            val pw = System.getenv("SUPREME_KEYSTORE_PASSWORD")
+            if (pw != null) {
+                storePassword = pw
+                keyAlias = System.getenv("SUPREME_KEY_ALIAS") ?: "supremebass"
+                keyPassword = System.getenv("SUPREME_KEY_PASSWORD") ?: pw
+            }
         }
     }
 
@@ -42,6 +64,7 @@ android {
     }
     buildFeatures {
         compose = true
+        prefab = true
     }
     composeOptions {
         kotlinCompilerExtensionVersion = "1.5.4"
@@ -54,6 +77,7 @@ dependencies {
     implementation("androidx.activity:activity-compose:1.8.1")
     implementation(platform("androidx.compose:compose-bom:2024.02.02"))
     implementation("androidx.compose.ui:ui")
+    implementation("androidx.compose.foundation:foundation:1.5.4")
     implementation("androidx.compose.ui:ui-graphics")
     implementation("androidx.compose.ui:ui-tooling-preview")
     implementation("androidx.compose.material3:material3")
@@ -62,4 +86,25 @@ dependencies {
 
     // Google AdMob
     implementation("com.google.android.gms:play-services-ads:23.1.0")
+
+    // ViewModel Compose
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
+
+    // Room
+    implementation("androidx.room:room-runtime:2.6.1")
+    implementation("androidx.room:room-ktx:2.6.1")
+    ksp("androidx.room:room-compiler:2.6.1")
+
+    // Oboe (native audio)
+    implementation("com.google.oboe:oboe:1.8.0")
+
+    // CameraX (visual analysis)
+    implementation("androidx.camera:camera-core:1.3.1")
+    implementation("androidx.camera:camera-camera2:1.3.1")
+    implementation("androidx.camera:camera-lifecycle:1.3.1")
+    implementation("androidx.camera:camera-view:1.3.1")
+
+    // Testing
+    testImplementation("junit:junit:4.13.2")
+    testImplementation("org.jetbrains.kotlin:kotlin-test:1.9.20")
 }

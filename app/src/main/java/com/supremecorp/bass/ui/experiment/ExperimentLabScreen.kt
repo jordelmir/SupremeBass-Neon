@@ -1,0 +1,354 @@
+package com.supremecorp.bass.ui.experiment
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.supremecorp.bass.domain.model.AcousticExperiment
+import com.supremecorp.bass.domain.model.ExperimentStatus
+import com.supremecorp.bass.domain.model.ExperimentType
+import com.supremecorp.bass.ui.theme.TitanColors
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ExperimentLabScreen(
+    viewModel: ExperimentLabViewModel = viewModel()
+) {
+    val state by viewModel.state.collectAsState()
+    var showNewExperimentDialog by remember { mutableStateOf(false) }
+
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(TitanColors.AbsoluteBlack)
+            .verticalScroll(rememberScrollState())
+            .padding(16.dp)
+    ) {
+        Text(
+            text = "EXPERIMENT LAB",
+            style = TextStyle(
+                fontSize = 24.sp,
+                fontWeight = FontWeight.Black,
+                color = TitanColors.NeonCyan,
+                letterSpacing = 4.sp,
+                shadow = Shadow(
+                    color = TitanColors.NeonCyan.copy(alpha = 0.6f),
+                    offset = Offset.Zero,
+                    blurRadius = 12f
+                )
+            )
+        )
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        Text(
+            text = "Acoustic experiments — digital signal only, no physical measurements claimed",
+            style = TextStyle(
+                fontSize = 9.sp,
+                color = TitanColors.NeonCyan.copy(alpha = 0.5f),
+                letterSpacing = 1.sp
+            )
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // New experiment button
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            Button(
+                onClick = { showNewExperimentDialog = true },
+                modifier = Modifier.weight(1f).height(48.dp),
+                colors = ButtonDefaults.buttonColors(containerColor = TitanColors.RadioactiveGreen),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null, tint = TitanColors.AbsoluteBlack)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("NEW EXPERIMENT", fontWeight = FontWeight.Bold, color = TitanColors.AbsoluteBlack)
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        // Running experiment
+        state.currentExperiment?.let { experiment ->
+            if (experiment.status == ExperimentStatus.RUNNING || experiment.status == ExperimentStatus.PAUSED) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0A0A)),
+                    shape = RoundedCornerShape(12.dp)
+                ) {
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Text("RUNNING", style = TextStyle(fontSize = 10.sp, color = TitanColors.RadioactiveGreen, fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(experiment.name, style = TextStyle(fontSize = 14.sp, color = Color.White, fontWeight = FontWeight.Bold))
+                        Text("${experiment.type.name} • Step ${experiment.currentStep}/${experiment.stepCount}", style = TextStyle(fontSize = 11.sp, color = Color.Gray))
+
+                        Spacer(modifier = Modifier.height(8.dp))
+                        LinearProgressIndicator(
+                            progress = experiment.progress,
+                            modifier = Modifier.fillMaxWidth().height(8.dp).clip(RoundedCornerShape(4.dp)),
+                            color = if (experiment.status == ExperimentStatus.RUNNING) TitanColors.RadioactiveGreen else TitanColors.NeonYellow,
+                            trackColor = TitanColors.CarbonGray
+                        )
+
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                            if (experiment.status == ExperimentStatus.RUNNING) {
+                                Button(
+                                    onClick = viewModel::pauseExperiment,
+                                    colors = ButtonDefaults.buttonColors(containerColor = TitanColors.NeonYellow),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) { Text("PAUSE", fontSize = 10.sp, color = TitanColors.AbsoluteBlack) }
+                            } else {
+                                Button(
+                                    onClick = viewModel::resumeExperiment,
+                                    colors = ButtonDefaults.buttonColors(containerColor = TitanColors.RadioactiveGreen),
+                                    shape = RoundedCornerShape(8.dp)
+                                ) { Text("RESUME", fontSize = 10.sp, color = TitanColors.AbsoluteBlack) }
+                            }
+                            Button(
+                                onClick = viewModel::abortExperiment,
+                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF1744)),
+                                shape = RoundedCornerShape(8.dp)
+                            ) { Text("ABORT", fontSize = 10.sp, color = Color.White) }
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+            }
+        }
+
+        // Experiment history
+        Card(
+            modifier = Modifier.fillMaxWidth(),
+            colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0A0A)),
+            shape = RoundedCornerShape(12.dp)
+        ) {
+            Column(modifier = Modifier.padding(16.dp)) {
+                Text("EXPERIMENTS", style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
+                Spacer(modifier = Modifier.height(8.dp))
+
+                if (state.experiments.isEmpty()) {
+                    Text(
+                        text = "No experiments yet",
+                        style = TextStyle(fontSize = 13.sp, color = Color.Gray),
+                        modifier = Modifier.fillMaxWidth().padding(vertical = 24.dp)
+                    )
+                } else {
+                    Column {
+                        state.experiments.forEach { experiment ->
+                            ExperimentListItem(
+                                experiment = experiment,
+                                isSelected = state.selectedExperiment?.id == experiment.id,
+                                onClick = { viewModel.selectExperiment(experiment) },
+                                onDelete = { viewModel.deleteExperiment(experiment.id) }
+                            )
+                        }
+                    }
+                }
+            }
+        }
+
+        // Selected experiment detail
+        state.selectedExperiment?.let { experiment ->
+            Spacer(modifier = Modifier.height(16.dp))
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0A0A)),
+                shape = RoundedCornerShape(12.dp)
+            ) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("EXPERIMENT DETAIL", style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
+                    Spacer(modifier = Modifier.height(8.dp))
+                    ExperimentDetailCard(experiment = experiment)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(24.dp))
+    }
+
+    if (showNewExperimentDialog) {
+        NewExperimentDialog(
+            onDismiss = { showNewExperimentDialog = false },
+            onStartFreqResponse = { name, steps, dwell ->
+                showNewExperimentDialog = false
+                viewModel.startFrequencyResponseExperiment(name, steps = steps, dwellMs = dwell)
+            },
+            onStartDistortion = { name ->
+                showNewExperimentDialog = false
+                viewModel.startDistortionExperiment(name)
+            }
+        )
+    }
+}
+
+@Composable
+fun NewExperimentDialog(
+    onDismiss: () -> Unit,
+    onStartFreqResponse: (String, Int, Int) -> Unit,
+    onStartDistortion: (String) -> Unit
+) {
+    var name by remember { mutableStateOf("") }
+    var steps by remember { mutableStateOf("30") }
+    var dwell by remember { mutableStateOf("300") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        containerColor = Color(0xFF1A1A1A),
+        title = { Text("New Experiment", color = TitanColors.NeonCyan) },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = name,
+                    onValueChange = { name = it },
+                    label = { Text("Name") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = steps,
+                    onValueChange = { steps = it },
+                    label = { Text("Steps") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = dwell,
+                    onValueChange = { dwell = it },
+                    label = { Text("Dwell (ms)") },
+                    modifier = Modifier.fillMaxWidth(),
+                    singleLine = true
+                )
+            }
+        },
+        confirmButton = {
+            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Button(
+                    onClick = { onStartFreqResponse(name.ifEmpty { "Freq Response" }, steps.toIntOrNull() ?: 30, dwell.toIntOrNull() ?: 300) },
+                    colors = ButtonDefaults.buttonColors(containerColor = TitanColors.RadioactiveGreen)
+                ) { Text("Freq Response", color = TitanColors.AbsoluteBlack) }
+                Button(
+                    onClick = { onStartDistortion(name.ifEmpty { "Distortion" }) },
+                    colors = ButtonDefaults.buttonColors(containerColor = TitanColors.NeonOrange)
+                ) { Text("Distortion", color = Color.White) }
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancel", color = Color.Gray) }
+        }
+    )
+}
+
+@Composable
+fun ExperimentListItem(
+    experiment: AcousticExperiment,
+    isSelected: Boolean,
+    onClick: () -> Unit,
+    onDelete: () -> Unit
+) {
+    val color = when (experiment.status) {
+        ExperimentStatus.COMPLETED -> TitanColors.RadioactiveGreen
+        ExperimentStatus.RUNNING -> TitanColors.NeonYellow
+        ExperimentStatus.FAILED -> Color(0xFFFF1744)
+        ExperimentStatus.ABORTED -> TitanColors.NeonOrange
+        else -> Color.Gray
+    }
+
+    Surface(
+        onClick = onClick,
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 4.dp)
+            .border(
+                width = if (isSelected) 1.5.dp else 0.5.dp,
+                color = color.copy(alpha = 0.5f),
+                shape = RoundedCornerShape(8.dp)
+            ),
+        color = if (isSelected) color.copy(alpha = 0.1f) else Color(0xFF1A1A1A),
+        shape = RoundedCornerShape(8.dp)
+    ) {
+        Row(
+            modifier = Modifier.padding(12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(
+                    text = experiment.name,
+                    style = TextStyle(fontSize = 12.sp, color = color, fontWeight = FontWeight.Bold)
+                )
+                Text(
+                    text = "${experiment.type.name} • ${experiment.status.name} • ${experiment.observations.size} obs",
+                    style = TextStyle(fontSize = 9.sp, color = Color.Gray)
+                )
+            }
+            IconButton(onClick = onDelete) {
+                Icon(Icons.Default.Delete, contentDescription = "Delete", tint = Color(0xFFFF1744))
+            }
+        }
+    }
+}
+
+@Composable
+fun ExperimentDetailCard(experiment: AcousticExperiment) {
+    Column {
+        DetailRow("Name", experiment.name)
+        DetailRow("Type", experiment.type.name)
+        DetailRow("Status", experiment.status.name)
+        DetailRow("Protocol", "v${experiment.protocolVersion}")
+        DetailRow("Steps", "${experiment.currentStep}/${experiment.stepCount}")
+        DetailRow("Dwell", "${experiment.dwellMs}ms")
+        DetailRow("Repeats", experiment.repeatsPerStep.toString())
+        DetailRow("Observations", experiment.observations.size.toString())
+
+        experiment.result?.let { result ->
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("RESULT", style = TextStyle(fontSize = 9.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold))
+            Spacer(modifier = Modifier.height(4.dp))
+            DetailRow("Peak Gain", "${String.format("%.2f", result.peakGainDb)} dB")
+            DetailRow("RMS Gain", "${String.format("%.2f", result.rmsGainDb)} dB")
+            DetailRow("Duration", "${result.durationMs / 1000}s")
+            Text(result.summary, style = TextStyle(fontSize = 9.sp, color = Color.Gray))
+        }
+
+        experiment.errorMessage?.let { err ->
+            Spacer(modifier = Modifier.height(4.dp))
+            Text("ERROR: $err", style = TextStyle(fontSize = 9.sp, color = Color(0xFFFF1744)))
+        }
+    }
+}
+
+@Composable
+fun DetailRow(label: String, value: String) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        Text(label, style = TextStyle(fontSize = 10.sp, color = Color.Gray))
+        Text(value, style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan, fontWeight = FontWeight.Medium))
+    }
+}

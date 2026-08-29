@@ -1,8 +1,8 @@
-# SupremeBass - Ads Declaration
+# Supreme Acoustics — Ads Declaration
 
-**App:** SupremeBass - Bass Booster & Sound Enhancer
+**App:** Supreme Acoustics - Bass Booster & Audio Lab
 **Developer:** Supreme Corp
-**Date:** July 4, 2026
+**Date:** August 29, 2026
 
 ---
 

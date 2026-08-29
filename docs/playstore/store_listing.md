@@ -1,13 +1,13 @@
-# SupremeBass - Store Listing
+# Supreme Acoustics - Store Listing
 
 ---
 
 ## Basic Information
 
-**Title:** SupremeBass - Bass Booster & Sound Enhancer
-**Package name:** com.supremecorp.supremebass
+**Title:** Supreme Acoustics - Bass Booster & Audio Lab
+**Package name:** com.supremecorp.bass
 **Category:** Music & Audio
-**Tags:** bass booster, equalizer, sound enhancer, audio, music
+**Tags:** bass booster, equalizer, sound enhancer, audio, acoustic lab, signal generator
 **Content rating:** Teen (IARC)
 **Developer:** Supreme Corp
 
@@ -15,101 +15,103 @@
 
 ## Short Description
 
-Professional bass booster with AI-powered sound presets and real-time equalizer controls.
+Professional bass booster with acoustic lab, signal generator, and device characterization.
 
-**Character count:** 59 / 80
+**Character count:** 72 / 80
 
 ---
 
 ## Full Description
 
-SupremeBass is a professional-grade bass booster and sound enhancer that puts studio-quality audio control in your hands. Powered by on-device AI, SupremeBass delivers personalized sound tuning that adapts to your listening preferences — all processed locally on your device for complete privacy.
+Supreme Acoustics is a professional-grade audio platform combining bass boosting with an acoustic laboratory for signal generation, device characterization, and experimental research — all processed locally on your device for complete privacy.
 
-**AI Sound Tuner**
-SupremeBass features an intelligent AI Sound Tuner that analyzes your audio output in real-time and suggests optimized settings. The AI runs entirely on-device, meaning your audio data never leaves your phone. Get personalized sound profiles without compromising your privacy.
+**Bass Booster & Sound Enhancer**
+Take your low-end to the next level with our precision bass booster. Adjust bass frequencies with smooth, responsive sliders that give you fine-grained control over the low-end response. Works with all audio apps on your device — music, videos, podcasts, and games.
 
-**Bass Booster**
-Take your low-end to the next level with our precision bass booster. Adjust bass frequencies with smooth, responsive sliders that give you fine-grained control over the low-end response. Whether you're listening to hip-hop, EDM, rock, or podcasts, SupremeBass delivers powerful, clean bass without distortion.
+**Signal Generator**
+Generate precise audio signals for testing and calibration. Choose from Sine, Square, Triangle, Sawtooth, Chirp, and Noise Band waveforms. Configure frequency (20 Hz - 20 kHz), amplitude, and modulation parameters for professional acoustic testing.
 
-**10-Band Equalizer**
-Shape your sound with our professional 10-band graphic equalizer. Each band offers precise control over specific frequency ranges, letting you sculpt the exact sound signature you want. Save your custom EQ settings as presets for instant access.
+**Acoustic Sweep Engine**
+Run automated frequency sweeps (Linear, Logarithmic, or Stepped) to characterize speaker response. The sweep engine generates test tones across the full audible spectrum with configurable dwell time and step count.
 
-**Built-in Presets**
-Get started quickly with our collection of professionally tuned presets designed for different genres and listening scenarios:
-- Bass Boost — Enhanced low-end response
-- Vocal Clarity — Crisp, clear vocals
-- Flat — Neutral, uncolored response
-- Rock — Punchy mids and tight bass
-- Electronic — Deep sub-bass and sparkling highs
-- Acoustic — Natural, warm tone
-- Podcast — Optimized for speech clarity
-- Custom — Create and save your own presets
+**Device Lab**
+Characterize your device's frequency response. Save multiple device profiles with measured frequency response points. Export telemetry data as JSON for analysis. Track response characteristics across different output routes (speaker, headphones, Bluetooth).
 
-**Real-Time Visualizer**
-Watch your music come alive with our real-time audio visualizer. Choose from multiple visualization styles that react to your music's frequency spectrum, giving you a visual representation of your sound.
+**Experiment Engine**
+Run controlled acoustic experiments with configurable variables. Track observations, compute results (peak/RMS gain, THD), and persist experiment history. Supports frequency response, distortion profiling, and custom experiment types.
 
-**Simple, Clean Interface**
-SupremeBass is designed with simplicity in mind. The intuitive interface makes it easy to adjust settings on the fly. Large, responsive controls ensure you can make precise adjustments even while on the move.
+**Flame Lab (Experimental)**
+Explore acoustic flame research with safety interlocks. Features headphone detection, duration limits, cooldown timers, and amplitude restrictions. Includes safety disclaimer and experimental warnings.
 
-**Lightweight & Efficient**
-SupremeBass is optimized for performance and battery life. The app runs efficiently in the background without draining your battery or consuming excessive resources.
+**Native C++ DSP Engine**
+Powered by Oboe for ultra-low latency audio. The native DSP engine (C++17) provides hardware-accelerated oscillator and limiter processing with sub-millisecond latency on supported devices.
 
-**Privacy-First Design**
-Your audio stays on your device. SupremeBass processes all audio locally — no cloud processing, no data uploads, no accounts required. Your listening habits and audio data remain completely private.
+**Safety First**
+- Route interlock blocks unsafe audio routes
+- Amplitude limiting prevents speaker damage
+- Duration limits with auto-shutoff (30 minutes)
+- First-run safety disclaimer
+- Headphone detection for flame experiments
 
 **Key Features:**
-- AI-powered sound tuning (100% local processing)
-- Real-time bass booster with adjustable intensity
-- 10-band graphic equalizer
-- Multiple genre-specific presets
-- Custom preset creation and saving
-- Real-time audio visualizer
-- Lightweight and battery-efficient
+- Professional bass booster with adjustable intensity
+- Signal generator with 6+ waveforms
+- Automated frequency sweep engine
+- Device frequency response characterization
+- Controlled experiment engine
+- Flame lab with safety interlocks
+- Native C++ DSP via Oboe
+- JSON telemetry export
+- Privacy-first: all processing local
 - No account required
-- Works with all audio apps on your device
 
 **Permissions:**
-SupremeBass requires minimal permissions to function. Audio processing is handled through Android's built-in audio APIs. No internet permission is required for core functionality (ads served via Google AdMob may require network access).
+Supreme Acoustics requires minimal permissions. Audio processing is handled through Android's built-in audio APIs and native Oboe library. Internet access is used for advertising via Google AdMob.
 
 **Support:**
-Have questions or feedback? Contact us at supreme@email.com
+Have questions or feedback? Contact us at jordelmir@gmail.com
 
 **What's New:**
-- Initial release of SupremeBass
-- AI Sound Tuner with on-device processing
-- Bass booster and 10-band equalizer
-- Collection of professionally tuned presets
-- Real-time audio visualizer
+- Supreme Acoustics platform with acoustic lab features
+- Signal generator with chirp and noise band support
+- Device characterization with Room database
+- Experiment engine with persistence
+- Flame lab with safety interlocks
+- Native C++ DSP via Oboe
+- Auto-shutoff timer and safety disclaimers
 
 ---
 
 ## Feature Graphic
 
-**Headline:** SupremeBass - Professional Bass Booster
-**Subheadline:** AI-Powered Sound Tuning
+**Headline:** Supreme Acoustics - Professional Audio Lab
+**Subheadline:** Signal Generator • Device Characterization • Native DSP
 
 ---
 
 ## What's New (Latest Version)
 
-Welcome to SupremeBass! This initial release includes:
-- AI Sound Tuner with local processing
-- Bass booster and 10-band equalizer
-- Professionally tuned presets
-- Real-time audio visualizer
-- Clean, intuitive interface
+Welcome to Supreme Acoustics! This release transforms Supreme Bass into a complete acoustic platform:
+- Bass booster with 300% max boost
+- Signal generator with 6+ waveforms
+- Automated frequency sweep engine
+- Device lab with frequency response characterization
+- Experiment engine with result computation
+- Flame lab with safety interlocks
+- Native C++ DSP via Oboe
+- Auto-shutoff and safety features
 
 ---
 
 ## Screenshots Needed
 
-1. Main equalizer screen
-2. Bass booster controls
-3. AI Sound Tuner in action
-4. Preset selection screen
-5. Audio visualizer
-6. Settings screen
+1. Main bass boost screen with neon UI
+2. Signal Lab with waveform selection
+3. Device Lab with frequency response
+4. Experiment Lab with running experiment
+5. Flame Lab with safety controls
+6. Settings with Oboe backend toggle
 
 ---
 
-*Document version: 1.0 | Date: July 4, 2026*
+*Document version: 2.0 | Date: August 29, 2026*

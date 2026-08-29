@@ -3,8 +3,6 @@ package com.supremecorp.bass
 import android.app.Activity
 import android.content.Context
 import android.util.Log
-import android.view.ViewGroup
-import android.widget.FrameLayout
 import com.google.android.gms.ads.AdListener
 import com.google.android.gms.ads.AdRequest
 import com.google.android.gms.ads.AdSize
@@ -16,17 +14,10 @@ import com.google.android.gms.ads.interstitial.InterstitialAdLoadCallback
 import com.google.android.gms.ads.rewarded.RewardedAd
 import com.google.android.gms.ads.rewarded.RewardedAdLoadCallback
 import com.google.android.gms.ads.MobileAds
+import com.supremecorp.bass.data.ads.AdUnitProvider
 
 object AdsManager {
     private const val TAG = "SupremeBass_Ads"
-
-    private const val BANNER_AD_UNIT_ID = "ca-app-pub-9295208787843008/6689805076"
-    private const val INTERSTITIAL_AD_UNIT_ID = "ca-app-pub-9295208787843008/2323184655"
-    private const val REWARDED_AD_UNIT_ID = "ca-app-pub-9295208787843008/6322973561"
-
-    fun getBannerAdId(): String = BANNER_AD_UNIT_ID
-    fun getInterstitialAdId(): String = INTERSTITIAL_AD_UNIT_ID
-    fun getRewardedAdId(): String = REWARDED_AD_UNIT_ID
 
     private var interstitialAd: InterstitialAd? = null
     private var rewardedAd: RewardedAd? = null
@@ -34,6 +25,8 @@ object AdsManager {
 
     fun initialize(context: Context) {
         if (isInitialized) return
+        Log.i(TAG, "Initializing AdMob")
+        AdUnitProvider.logAdIds(context)
         MobileAds.initialize(context) { initializationStatus ->
             Log.d(TAG, "AdMob initialized: ${initializationStatus.adapterStatusMap}")
             isInitialized = true
@@ -45,9 +38,10 @@ object AdsManager {
     // ─── BANNER ───
 
     fun createBannerAd(context: Context): AdView {
-        Log.d(TAG, "Creating banner ad with unitId: $BANNER_AD_UNIT_ID")
+        val adId = AdUnitProvider.bannerAdId(context)
+        Log.d(TAG, "Creating banner ad with unitId: $adId")
         return AdView(context).apply {
-            adUnitId = BANNER_AD_UNIT_ID
+            adUnitId = adId
             setAdSize(AdSize.BANNER)
             adListener = object : AdListener() {
                 override fun onAdLoaded() {
@@ -72,7 +66,7 @@ object AdsManager {
     private fun preloadInterstitial(context: Context) {
         InterstitialAd.load(
             context,
-            INTERSTITIAL_AD_UNIT_ID,
+            AdUnitProvider.interstitialAdId(context),
             AdRequest.Builder().build(),
             object : InterstitialAdLoadCallback() {
                 override fun onAdLoaded(ad: InterstitialAd) {
@@ -112,7 +106,7 @@ object AdsManager {
     private fun preloadRewarded(context: Context) {
         RewardedAd.load(
             context,
-            REWARDED_AD_UNIT_ID,
+            AdUnitProvider.rewardedAdId(context),
             AdRequest.Builder().build(),
             object : RewardedAdLoadCallback() {
                 override fun onAdLoaded(ad: RewardedAd) {

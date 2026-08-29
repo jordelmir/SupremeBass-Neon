@@ -1,9 +1,9 @@
-# Privacy Policy for SupremeBass
+# Privacy Policy for Supreme Acoustics
 
-**Effective Date:** July 4, 2026
-**Last Updated:** July 4, 2026
+**Effective Date:** August 29, 2026
+**Last Updated:** August 29, 2026
 **Developer:** Supreme Corp
-**App:** SupremeBass - Bass Booster & Sound Enhancer
+**App:** Supreme Acoustics - Bass Booster & Audio Lab
 
 ---
 

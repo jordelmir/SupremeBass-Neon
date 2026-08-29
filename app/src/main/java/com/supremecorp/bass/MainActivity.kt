@@ -1,9 +1,15 @@
 package com.supremecorp.bass
 
+import android.Manifest
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
+import android.os.CountDownTimer
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.*
 import androidx.compose.animation.core.*
 import androidx.compose.foundation.background
@@ -44,24 +50,61 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.core.content.ContextCompat
 import com.supremecorp.bass.ui.components.AudioVisualizer
 import com.supremecorp.bass.ui.components.BreathingText
 import com.supremecorp.bass.ui.components.MatrixRain
 import com.supremecorp.bass.ui.components.NeonSwitch
+import com.supremecorp.bass.ui.device.DeviceLabScreen
+import com.supremecorp.bass.ui.experiment.ExperimentLabScreen
+import com.supremecorp.bass.ui.experiment.FlameLabScreen
+import com.supremecorp.bass.ui.navigation.SupremeAcousticsNavHost
+import com.supremecorp.bass.ui.signal.SignalLabScreen
+import com.supremecorp.bass.ui.settings.SettingsScreen
 import com.supremecorp.bass.ui.theme.*
 
 class MainActivity : ComponentActivity() {
+
+    private companion object {
+        const val TAG = "SupremeBass_MainActivity"
+    }
+
+    private val notificationPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestPermission()
+    ) { granted ->
+        Log.i(TAG, "POST_NOTIFICATIONS permission result: granted=$granted")
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        Log.i(TAG, "onCreate: SDK=${Build.VERSION.SDK_INT} | ${Build.MANUFACTURER} ${Build.MODEL}")
+
         AdsManager.initialize(this)
 
-        // Always stop service on fresh launch to ensure clean state
-        // If it was persisted as enabled, we'll restart it below
-        stopService(Intent(this, AudioService::class.java))
+        // Request POST_NOTIFICATIONS on Android 13+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                != PackageManager.PERMISSION_GRANTED
+            ) {
+                Log.i(TAG, "Requesting POST_NOTIFICATIONS permission")
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        }
+
+        // DON'T kill service on launch — let it persist if user had boost active
+        val wasEnabled = AudioStatePersistence.isEnabled(this)
+        Log.d(TAG, "Previous state: enabled=$wasEnabled gain=${AudioStatePersistence.gainValue(this)}")
 
         setContent {
             TitanTheme {
-                SupremeBassScreen()
+                SupremeAcousticsNavHost(
+                    enhanceContent = { SupremeBassScreen() },
+                    signalLabContent = { SignalLabScreen() },
+                    deviceLabContent = { DeviceLabScreen() },
+                    experimentLabContent = { ExperimentLabScreen() },
+                    flameLabContent = { FlameLabScreen() },
+                    settingsContent = { SettingsScreen() }
+                )
             }
         }
     }
@@ -78,10 +121,30 @@ fun SupremeBassScreen() {
     var isEnabled by remember { mutableStateOf(AudioStatePersistence.isEnabled(context)) }
     var gainValue by remember { mutableFloatStateOf(AudioStatePersistence.gainValue(context)) }
     var presetChangeCount by remember { mutableIntStateOf(0) }
+    var showDisclaimer by remember { mutableStateOf(!AudioStatePersistence.hasAcceptedDisclaimer(context)) }
+    var shutoffMinutesRemaining by remember { mutableIntStateOf(0) }
 
     val totalVolume = 100 + gainValue.toInt()
 
     val activity = context as? ComponentActivity
+
+    // Auto-shutoff timer (30 minutes max)
+    LaunchedEffect(isEnabled) {
+        if (isEnabled) {
+            shutoffMinutesRemaining = 30
+            while (shutoffMinutesRemaining > 0 && isEnabled) {
+                kotlinx.coroutines.delay(60_000L) // 1 minute
+                shutoffMinutesRemaining--
+            }
+            if (shutoffMinutesRemaining <= 0 && isEnabled) {
+                isEnabled = false
+                AudioStatePersistence.saveEnabled(context, false)
+                context.stopService(Intent(context, AudioService::class.java))
+            }
+        } else {
+            shutoffMinutesRemaining = 0
+        }
+    }
 
     // Sync service with UI state — always
     LaunchedEffect(isEnabled, gainValue) {
@@ -94,9 +157,56 @@ fun SupremeBassScreen() {
                 putExtra("GAIN", gainValue.toInt())
             }
             context.startService(intent)
-        } else {
+            Log.i("SupremeBass_Main", "Service started with gain=${gainValue.toInt()}")
+        } else if (!isEnabled) {
             context.stopService(Intent(context, AudioService::class.java))
+            Log.i("SupremeBass_Main", "Service stopped (disabled)")
         }
+    }
+
+    // Detect if service is running externally (e.g. restored from background)
+    DisposableEffect(Unit) {
+        onDispose {}
+    }
+
+    // First-run disclaimer dialog
+    if (showDisclaimer) {
+        AlertDialog(
+            onDismissRequest = { },
+            containerColor = Color(0xFF1A1A1A),
+            title = {
+                Text("⚠ Safety Warning", color = Color(0xFFFF1744), fontWeight = FontWeight.Bold)
+            },
+            text = {
+                Column {
+                    Text(
+                        text = "This app boosts system audio output. High gain levels can cause:",
+                        style = TextStyle(fontSize = 13.sp, color = Color.White)
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text("• Permanent hearing damage", style = TextStyle(fontSize = 12.sp, color = Color.Gray))
+                    Text("• Speaker hardware failure", style = TextStyle(fontSize = 12.sp, color = Color.Gray))
+                    Text("• Audio distortion at high volumes", style = TextStyle(fontSize = 12.sp, color = Color.Gray))
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = "Use at your own risk. Maximum boost is 300% (~30 dB). Auto-shutoff activates after 30 minutes.",
+                        style = TextStyle(fontSize = 11.sp, color = Color.Gray)
+                    )
+                }
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        showDisclaimer = false
+                        AudioStatePersistence.saveDisclaimerAccepted(context, true)
+                    },
+                    colors = ButtonDefaults.buttonColors(containerColor = TitanColors.RadioactiveGreen),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Text("I UNDERSTAND", color = TitanColors.AbsoluteBlack, fontWeight = FontWeight.Bold)
+                }
+            }
+        )
     }
 
     val infiniteTransition = rememberInfiniteTransition(label = "main_screen")
@@ -271,6 +381,20 @@ fun SupremeBassScreen() {
                             )
                         )
                     )
+
+                    // Auto-shutoff timer
+                    if (isEnabled && shutoffMinutesRemaining > 0) {
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = "AUTO-SHOFF: ${shutoffMinutesRemaining}min",
+                            style = TextStyle(
+                                fontSize = 9.sp,
+                                fontWeight = FontWeight.Medium,
+                                letterSpacing = 2.sp,
+                                color = TitanColors.NeonYellow.copy(alpha = 0.7f)
+                            )
+                        )
+                    }
                 }
             }
 
