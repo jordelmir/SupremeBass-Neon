@@ -43,8 +43,9 @@ class AudioService : Service() {
 
             if (!wasEnabled || gain <= 0) {
                 Log.w(TAG, "Was disabled or gain=0, stopping self")
+                stopForeground(STOP_FOREGROUND_REMOVE)
                 stopSelf()
-                return START_STICKY
+                return START_NOT_STICKY
             }
         } else {
             gain = intent?.getIntExtra("GAIN", 0) ?: 0
@@ -54,6 +55,8 @@ class AudioService : Service() {
         // Always ensure engine exists (might have been killed by system)
         if (audioEngine == null) {
             Log.w(TAG, "Engine was null — recreating")
+            acquireWakeLock()
+            startForegroundNotification()
             audioEngine = LegacyEffectsEngine(this)
         }
 

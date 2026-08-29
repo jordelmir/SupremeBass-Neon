@@ -21,6 +21,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.supremecorp.bass.dsp.eq.EqualizerPreset
+import com.supremecorp.bass.ui.components.NeonScreenTitle
+import com.supremecorp.bass.ui.components.NeonCard
+import com.supremecorp.bass.ui.components.NeonSectionHeader
+import com.supremecorp.bass.ui.components.MatrixRain
 import com.supremecorp.bass.ui.theme.TitanColors
 
 @Composable
@@ -32,29 +36,18 @@ fun SettingsScreen() {
     var durationLimit by remember { mutableStateOf(AudioSettingsPrefs.durationLimit(context)) }
     var pcmFloat by remember { mutableStateOf(AudioSettingsPrefs.pcmFloat(context)) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(TitanColors.AbsoluteBlack)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "SETTINGS",
-            style = TextStyle(
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Black,
-                color = TitanColors.NeonCyan,
-                letterSpacing = 4.sp,
-                shadow = Shadow(
-                    color = TitanColors.NeonCyan.copy(alpha = 0.6f),
-                    offset = Offset.Zero,
-                    blurRadius = 12f
-                )
-            )
+    Box(modifier = Modifier.fillMaxSize().background(TitanColors.AbsoluteBlack)) {
+        MatrixRain(
+            modifier = Modifier.fillMaxSize(),
+            color = TitanColors.NeonCyan.copy(alpha = 0.12f)
         )
-
-        Spacer(modifier = Modifier.height(24.dp))
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
+        ) {
+        NeonScreenTitle(title = "SETTINGS")
 
         // Audio engine settings
         SettingsSection("AUDIO ENGINE") {
@@ -143,29 +136,15 @@ fun SettingsScreen() {
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+        }
     }
 }
 
 @Composable
 fun SettingsSection(title: String, content: @Composable ColumnScope.() -> Unit) {
-    Text(
-        text = title,
-        style = TextStyle(
-            fontSize = 10.sp,
-            fontWeight = FontWeight.Bold,
-            letterSpacing = 2.sp,
-            color = TitanColors.NeonCyan.copy(alpha = 0.7f)
-        )
-    )
-    Spacer(modifier = Modifier.height(8.dp))
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0A0A)),
-        shape = RoundedCornerShape(12.dp)
-    ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            content()
-        }
+    NeonSectionHeader(text = title)
+    NeonCard(modifier = Modifier.fillMaxWidth()) {
+        content()
     }
 }
 

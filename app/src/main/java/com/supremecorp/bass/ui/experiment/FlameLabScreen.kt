@@ -22,6 +22,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.supremecorp.bass.domain.model.*
+import com.supremecorp.bass.ui.components.NeonScreenTitle
+import com.supremecorp.bass.ui.components.NeonCard
+import com.supremecorp.bass.ui.components.NeonButton
+import com.supremecorp.bass.ui.components.NeonSectionHeader
+import com.supremecorp.bass.ui.components.MatrixRain
 import com.supremecorp.bass.ui.theme.TitanColors
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -52,55 +57,30 @@ fun FlameLabScreen(
         )
     )
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(TitanColors.AbsoluteBlack)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "FLAME LAB",
-            style = TextStyle(
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Black,
-                color = TitanColors.NeonOrange,
-                letterSpacing = 4.sp,
-                shadow = Shadow(
-                    color = TitanColors.NeonOrange.copy(alpha = 0.6f),
-                    offset = Offset.Zero,
-                    blurRadius = 12f
-                )
-            )
+    Box(modifier = Modifier.fillMaxSize().background(TitanColors.AbsoluteBlack)) {
+        MatrixRain(
+            modifier = Modifier.fillMaxSize(),
+            color = TitanColors.NeonOrange.copy(alpha = 0.12f)
         )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Text(
-            text = "⚠ Experimental — digital signal only — no physical flame claims",
-            style = TextStyle(
-                fontSize = 9.sp,
-                color = TitanColors.NeonOrange.copy(alpha = 0.7f),
-                letterSpacing = 1.sp
-            )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
+        ) {
+        NeonScreenTitle(
+            title = "FLAME LAB",
+            subtitle = "⚠ Experimental — digital signal only — no physical flame claims",
+            accentColor = TitanColors.NeonOrange
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // Safety warning banner
         if (showDisclaimer) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFF1744).copy(alpha = 0.15f)),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(Icons.Default.Warning, contentDescription = null, tint = Color(0xFFFF1744))
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text("SAFETY DISCLAIMER", style = TextStyle(fontSize = 11.sp, color = Color(0xFFFF1744), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
+            NeonCard(glowColor = Color(0xFFFF1744)) {
+                Text("SAFETY DISCLAIMER", style = TextStyle(fontSize = 10.sp, color = Color(0xFFFF1744), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
+                Spacer(modifier = Modifier.height(8.dp))
                     Text(
                         text = "This is a digital acoustic signal generator for experimental research purposes only. " +
                                 "It does NOT measure or claim to interact with physical flames. " +
@@ -119,7 +99,6 @@ fun FlameLabScreen(
                             Text("Dismiss", color = Color.Gray, fontSize = 10.sp)
                         }
                     }
-                }
             }
             Spacer(modifier = Modifier.height(16.dp))
         }
@@ -130,12 +109,7 @@ fun FlameLabScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Experiment configuration
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0A0A)),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+        NeonCard(glowColor = TitanColors.NeonCyan) {
                 Text("CONFIGURATION", style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
                 Spacer(modifier = Modifier.height(12.dp))
 
@@ -229,7 +203,6 @@ fun FlameLabScreen(
                     maxLines = 3
                 )
             }
-        }
 
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -264,6 +237,7 @@ fun FlameLabScreen(
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+        }
     }
 }
 
@@ -273,11 +247,7 @@ fun SafetyStatusCard(state: com.supremecorp.bass.domain.model.FlameSafetyState) 
     val text = if (state.canStart) "SAFE" else "BLOCKED"
     val detail = state.violations.joinToString(", ") { it.name.replace("_", " ") }
 
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.1f)),
-        shape = RoundedCornerShape(12.dp)
-    ) {
+    NeonCard(glowColor = color) {
         Row(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically

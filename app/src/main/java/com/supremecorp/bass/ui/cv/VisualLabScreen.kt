@@ -22,6 +22,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.supremecorp.bass.cv.VisualAcousticData
+import com.supremecorp.bass.ui.components.NeonScreenTitle
+import com.supremecorp.bass.ui.components.NeonCard
+import com.supremecorp.bass.ui.components.NeonButton
+import com.supremecorp.bass.ui.components.NeonSectionHeader
+import com.supremecorp.bass.ui.components.MatrixRain
 import com.supremecorp.bass.ui.theme.TitanColors
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -31,49 +36,25 @@ fun VisualLabScreen(
     isCapturing: Boolean = false,
     visualData: VisualAcousticData? = null
 ) {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(TitanColors.AbsoluteBlack)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "VISUAL LAB",
-            style = TextStyle(
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Black,
-                color = TitanColors.NeonCyan,
-                letterSpacing = 4.sp,
-                shadow = Shadow(
-                    color = TitanColors.NeonCyan.copy(alpha = 0.6f),
-                    offset = Offset.Zero,
-                    blurRadius = 12f
-                )
-            )
+    Box(modifier = Modifier.fillMaxSize().background(TitanColors.AbsoluteBlack)) {
+        MatrixRain(
+            modifier = Modifier.fillMaxSize(),
+            color = TitanColors.NeonCyan.copy(alpha = 0.12f)
         )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Text(
-            text = "Visual acoustic analysis — camera-based brightness/contrast",
-            style = TextStyle(
-                fontSize = 9.sp,
-                color = TitanColors.NeonCyan.copy(alpha = 0.5f),
-                letterSpacing = 1.sp
-            )
-        )
-
-        Spacer(modifier = Modifier.height(16.dp))
-
-        // Capture controls
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0A0A)),
-            shape = RoundedCornerShape(12.dp)
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
         ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("CAPTURE", style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
+            NeonScreenTitle(
+                title = "VISUAL LAB",
+                subtitle = "Visual acoustic analysis — camera-based brightness/contrast"
+            )
+
+            // Capture controls
+            NeonCard(glowColor = TitanColors.RadioactiveGreen) {
+                NeonSectionHeader(text = "CAPTURE")
                 Spacer(modifier = Modifier.height(12.dp))
 
                 Button(
@@ -98,19 +79,13 @@ fun VisualLabScreen(
                     )
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // Visual data display
-        if (visualData != null) {
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0A0A)),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("ANALYSIS", style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
+            // Visual data display
+            if (visualData != null) {
+                NeonCard(glowColor = TitanColors.NeonCyan) {
+                    NeonSectionHeader(text = "ANALYSIS")
                     Spacer(modifier = Modifier.height(12.dp))
 
                     DataRow("Brightness", String.format("%.3f", visualData.brightness))
@@ -139,18 +114,12 @@ fun VisualLabScreen(
                     )
                 }
             }
-        }
 
-        Spacer(modifier = Modifier.height(16.dp))
+            Spacer(modifier = Modifier.height(16.dp))
 
-        // Info card
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0A0A)),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("ABOUT", style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
+            // Info card
+            NeonCard(glowColor = TitanColors.NeonCyan) {
+                NeonSectionHeader(text = "ABOUT")
                 Spacer(modifier = Modifier.height(8.dp))
                 Text(
                     text = "Visual Lab analyzes camera feed brightness and contrast patterns. " +
@@ -159,9 +128,9 @@ fun VisualLabScreen(
                     style = TextStyle(fontSize = 11.sp, color = Color.Gray)
                 )
             }
-        }
 
-        Spacer(modifier = Modifier.height(24.dp))
+            Spacer(modifier = Modifier.height(24.dp))
+        }
     }
 }
 

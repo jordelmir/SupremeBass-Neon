@@ -30,6 +30,14 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.supremecorp.bass.domain.model.Waveform
 import com.supremecorp.bass.signal.SignalEngineState
 import com.supremecorp.bass.ui.theme.TitanColors
+import com.supremecorp.bass.ui.components.NeonScreenTitle
+import com.supremecorp.bass.ui.components.NeonCard
+import com.supremecorp.bass.ui.components.NeonButton
+import com.supremecorp.bass.ui.components.NeonSectionHeader
+import com.supremecorp.bass.ui.components.NeonChip
+import com.supremecorp.bass.ui.components.DetailRow as SharedDetailRow
+import com.supremecorp.bass.ui.components.EngineStateIndicator as SharedEngineStateIndicator
+import com.supremecorp.bass.ui.components.MatrixRain
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -38,48 +46,29 @@ fun SignalLabScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(TitanColors.AbsoluteBlack)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "SIGNAL LAB",
-            style = TextStyle(
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Black,
-                color = TitanColors.NeonCyan,
-                letterSpacing = 4.sp,
-                shadow = Shadow(
-                    color = TitanColors.NeonCyan.copy(alpha = 0.6f),
-                    offset = Offset.Zero,
-                    blurRadius = 12f
-                )
-            )
+    Box(modifier = Modifier.fillMaxSize().background(TitanColors.AbsoluteBlack)) {
+        MatrixRain(
+            modifier = Modifier.fillMaxSize(),
+            color = TitanColors.NeonCyan.copy(alpha = 0.12f)
         )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Text(
-            text = "Digital signal generation — acoustic output not independently verified",
-            style = TextStyle(
-                fontSize = 9.sp,
-                color = TitanColors.NeonCyan.copy(alpha = 0.5f),
-                letterSpacing = 1.sp
-            )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
+        ) {
+        NeonScreenTitle(
+            title = "SIGNAL LAB",
+            subtitle = "Digital signal generation — acoustic output not independently verified"
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         // Engine state indicator
-        EngineStateIndicator(state.engineState)
+        SharedEngineStateIndicator(state.engineState)
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // Waveform selector
-        Text("WAVEFORM", style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
+        NeonSectionHeader(text = "WAVEFORM")
         Spacer(modifier = Modifier.height(8.dp))
         WaveformSelector(
             selected = state.waveform,
@@ -89,7 +78,7 @@ fun SignalLabScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Frequency control
-        Text("FREQUENCY: ${String.format("%.1f", state.frequencyHz)} Hz", style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
+        NeonSectionHeader(text = "FREQUENCY: ${String.format("%.1f", state.frequencyHz)} Hz")
         Spacer(modifier = Modifier.height(4.dp))
         Slider(
             value = state.frequencyHz.toFloat(),
@@ -108,7 +97,7 @@ fun SignalLabScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         // Amplitude control
-        Text("AMPLITUDE: ${String.format("%.0f", state.amplitude * 100)}%", style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
+        NeonSectionHeader(text = "AMPLITUDE: ${String.format("%.0f", state.amplitude * 100)}%")
         Spacer(modifier = Modifier.height(4.dp))
         Slider(
             value = state.amplitude,
@@ -123,7 +112,7 @@ fun SignalLabScreen(
         Spacer(modifier = Modifier.height(12.dp))
 
         // Duration control
-        Text("DURATION: ${if (state.durationMs == 0L) "Continuous" else "${state.durationMs}ms"}", style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
+        NeonSectionHeader(text = "DURATION: ${if (state.durationMs == 0L) "Continuous" else "${state.durationMs}ms"}")
         Spacer(modifier = Modifier.height(4.dp))
         Slider(
             value = state.durationMs.toFloat(),
@@ -138,7 +127,7 @@ fun SignalLabScreen(
         // Chirp end frequency (conditional)
         if (state.waveform == Waveform.CHIRP) {
             Spacer(modifier = Modifier.height(12.dp))
-            Text("CHIRP END: ${String.format("%.1f", state.chirpEndHz)} Hz", style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
+            NeonSectionHeader(text = "CHIRP END: ${String.format("%.1f", state.chirpEndHz)} Hz")
             Spacer(modifier = Modifier.height(4.dp))
             Slider(
                 value = state.chirpEndHz.toFloat(),
@@ -154,14 +143,14 @@ fun SignalLabScreen(
         // Noise band controls (conditional)
         if (state.waveform == Waveform.NOISE_BAND) {
             Spacer(modifier = Modifier.height(12.dp))
-            Text("NOISE LOW: ${String.format("%.0f", state.noiseLowHz)} Hz", style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
+            NeonSectionHeader(text = "NOISE LOW: ${String.format("%.0f", state.noiseLowHz)} Hz")
             Slider(
                 value = state.noiseLowHz.toFloat(),
                 onValueChange = { viewModel.updateNoiseLow(it.toDouble()) },
                 valueRange = 1f..10_000f,
                 colors = SliderDefaults.colors(thumbColor = TitanColors.NeonCyan, activeTrackColor = TitanColors.NeonCyan)
             )
-            Text("NOISE HIGH: ${String.format("%.0f", state.noiseHighHz)} Hz", style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
+            NeonSectionHeader(text = "NOISE HIGH: ${String.format("%.0f", state.noiseHighHz)} Hz")
             Slider(
                 value = state.noiseHighHz.toFloat(),
                 onValueChange = { viewModel.updateNoiseHigh(it.toDouble()) },
@@ -173,7 +162,7 @@ fun SignalLabScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Sample rate selector
-        Text("SAMPLE RATE", style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
+        NeonSectionHeader(text = "SAMPLE RATE")
         Spacer(modifier = Modifier.height(8.dp))
         SampleRateSelector(
             selected = state.sampleRate,
@@ -258,20 +247,14 @@ fun SignalLabScreen(
         // Telemetry display
         state.telemetry?.let { telem ->
             Spacer(modifier = Modifier.height(16.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0A0A)),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text("SESSION TELEMETRY", style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
-                    Spacer(modifier = Modifier.height(8.dp))
-                    TelemetryRow("Peak", String.format("%.4f", telem.peak))
-                    TelemetryRow("RMS", String.format("%.4f", telem.rms))
-                    TelemetryRow("Duration", "${telem.durationMs}ms")
-                    TelemetryRow("Route", telem.audioRoute.name)
-                    TelemetryRow("Termination", telem.terminationReason)
-                }
+            NeonCard(glowColor = TitanColors.NeonCyan) {
+                NeonSectionHeader(text = "SESSION TELEMETRY")
+                Spacer(modifier = Modifier.height(8.dp))
+                SharedDetailRow("Peak", String.format("%.4f", telem.peak))
+                SharedDetailRow("RMS", String.format("%.4f", telem.rms))
+                SharedDetailRow("Duration", "${telem.durationMs}ms")
+                SharedDetailRow("Route", telem.audioRoute.name)
+                SharedDetailRow("Termination", telem.terminationReason)
             }
         }
 
@@ -307,44 +290,11 @@ fun SignalLabScreen(
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+        }
     }
 }
 
-@Composable
-fun EngineStateIndicator(state: SignalEngineState) {
-    val color = when (state) {
-        is SignalEngineState.Idle -> Color.Gray
-        is SignalEngineState.Preparing -> TitanColors.NeonYellow
-        is SignalEngineState.Running -> TitanColors.RadioactiveGreen
-        is SignalEngineState.Stopping -> TitanColors.NeonOrange
-        is SignalEngineState.Failed -> Color(0xFFFF1744)
-    }
-    val text = when (state) {
-        is SignalEngineState.Idle -> "IDLE"
-        is SignalEngineState.Preparing -> "PREPARING"
-        is SignalEngineState.Running -> "RUNNING"
-        is SignalEngineState.Stopping -> "STOPPING"
-        is SignalEngineState.Failed -> "FAILED: ${state.error.description()}"
-    }
 
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(color.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
-            .border(1.dp, color.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(10.dp)
-                .clip(CircleShape)
-                .background(color)
-        )
-        Spacer(modifier = Modifier.width(10.dp))
-        Text(text, style = TextStyle(fontSize = 11.sp, color = color, fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
-    }
-}
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -415,13 +365,4 @@ fun SampleRateSelector(selected: Int, onSelect: (Int) -> Unit) {
     }
 }
 
-@Composable
-fun TelemetryRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(label, style = TextStyle(fontSize = 10.sp, color = Color.Gray))
-        Text(value, style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan, fontWeight = FontWeight.Medium))
-    }
-}
+

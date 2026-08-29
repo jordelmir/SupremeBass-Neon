@@ -92,9 +92,17 @@ class MainActivity : ComponentActivity() {
             }
         }
 
-        // DON'T kill service on launch — let it persist if user had boost active
+        // Stop any orphaned service from previous session — user must re-enable boost
         val wasEnabled = AudioStatePersistence.isEnabled(this)
-        Log.d(TAG, "Previous state: enabled=$wasEnabled gain=${AudioStatePersistence.gainValue(this)}")
+        val prevGain = AudioStatePersistence.gainValue(this)
+        Log.d(TAG, "Previous state: enabled=$wasEnabled gain=$prevGain")
+
+        if (wasEnabled) {
+            Log.i(TAG, "Clearing stale boost state from previous session")
+            AudioStatePersistence.saveEnabled(this, false)
+            AudioStatePersistence.saveGain(this, 0f)
+            stopService(Intent(this, AudioService::class.java))
+        }
 
         setContent {
             TitanTheme {
@@ -153,13 +161,13 @@ fun SupremeBassScreen() {
         AudioStatePersistence.saveEnabled(context, isEnabled)
         AudioStatePersistence.saveGain(context, gainValue)
 
-        if (isEnabled && gainValue > 0) {
+        if (isEnabled) {
             val intent = Intent(context, AudioService::class.java).apply {
                 putExtra("GAIN", gainValue.toInt())
             }
             context.startService(intent)
             Log.i("SupremeBass_Main", "Service started with gain=${gainValue.toInt()}")
-        } else if (!isEnabled) {
+        } else {
             context.stopService(Intent(context, AudioService::class.java))
             Log.i("SupremeBass_Main", "Service stopped (disabled)")
         }

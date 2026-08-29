@@ -28,6 +28,13 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.supremecorp.bass.domain.model.DeviceAcousticProfile
 import com.supremecorp.bass.ui.device.MeasuredPoint
 import com.supremecorp.bass.signal.SignalEngineState
+import com.supremecorp.bass.ui.components.NeonScreenTitle
+import com.supremecorp.bass.ui.components.NeonCard
+import com.supremecorp.bass.ui.components.NeonButton
+import com.supremecorp.bass.ui.components.NeonSectionHeader
+import com.supremecorp.bass.ui.components.DetailRow as SharedDetailRow
+import com.supremecorp.bass.ui.components.EngineStateIndicator as SharedEngineStateIndicator
+import com.supremecorp.bass.ui.components.MatrixRain
 import com.supremecorp.bass.ui.theme.TitanColors
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -37,54 +44,30 @@ fun DeviceLabScreen(
 ) {
     val state by viewModel.state.collectAsState()
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(TitanColors.AbsoluteBlack)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "DEVICE LAB",
-            style = TextStyle(
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Black,
-                color = TitanColors.NeonCyan,
-                letterSpacing = 4.sp,
-                shadow = androidx.compose.ui.graphics.Shadow(
-                    color = TitanColors.NeonCyan.copy(alpha = 0.6f),
-                    offset = Offset.Zero,
-                    blurRadius = 12f
-                )
-            )
+    Box(modifier = Modifier.fillMaxSize().background(TitanColors.AbsoluteBlack)) {
+        MatrixRain(
+            modifier = Modifier.fillMaxSize(),
+            color = TitanColors.NeonCyan.copy(alpha = 0.12f)
         )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Text(
-            text = "Frequency response characterization — digital signal only, no calibrated mic",
-            style = TextStyle(
-                fontSize = 9.sp,
-                color = TitanColors.NeonCyan.copy(alpha = 0.5f),
-                letterSpacing = 1.sp
-            )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
+        ) {
+        NeonScreenTitle(
+            title = "DEVICE LAB",
+            subtitle = "Frequency response characterization — digital signal only, no calibrated mic"
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         // Engine state
-        EngineStateIndicator(state.engineState)
+        SharedEngineStateIndicator(state.engineState)
 
         Spacer(modifier = Modifier.height(16.dp))
 
         // Characterization controls
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0A0A)),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("CHARACTERIZATION", style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
+        NeonCard(glowColor = TitanColors.NeonCyan) {
+                NeonSectionHeader(text = "CHARACTERIZATION")
                 Spacer(modifier = Modifier.height(12.dp))
 
                 if (state.isCharacterizing) {
@@ -156,17 +139,12 @@ fun DeviceLabScreen(
         Spacer(modifier = Modifier.height(16.dp))
 
         // Saved profiles
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0A0A)),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
+        NeonCard(glowColor = TitanColors.NeonCyan) {
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
-                    Text("SAVED PROFILES", style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
+                    NeonSectionHeader(text = "SAVED PROFILES")
                     if (state.savedProfiles.isNotEmpty()) {
                         Text("${state.savedProfiles.size} profiles", style = TextStyle(fontSize = 10.sp, color = Color.Gray))
                     }
@@ -191,62 +169,19 @@ fun DeviceLabScreen(
                         }
                     }
                 }
-            }
         }
 
         // Selected profile detail
         state.selectedProfile?.let { profile ->
             Spacer(modifier = Modifier.height(16.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0A0A)),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("PROFILE DETAIL", style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
+            NeonCard(glowColor = TitanColors.NeonCyan) {
+                    NeonSectionHeader(text = "PROFILE DETAIL")
                     Spacer(modifier = Modifier.height(8.dp))
                     ProfileDetailCard(profile = profile)
                 }
-            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
-    }
-}
-
-@Composable
-fun EngineStateIndicator(state: SignalEngineState) {
-    val color = when (state) {
-        is SignalEngineState.Idle -> Color.Gray
-        is SignalEngineState.Preparing -> TitanColors.NeonYellow
-        is SignalEngineState.Running -> TitanColors.RadioactiveGreen
-        is SignalEngineState.Stopping -> TitanColors.NeonOrange
-        is SignalEngineState.Failed -> Color(0xFFFF1744)
-    }
-    val text = when (state) {
-        is SignalEngineState.Idle -> "IDLE"
-        is SignalEngineState.Preparing -> "PREPARING"
-        is SignalEngineState.Running -> "RUNNING"
-        is SignalEngineState.Stopping -> "STOPPING"
-        is SignalEngineState.Failed -> "FAILED: ${state.error.description()}"
-    }
-
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .background(color.copy(alpha = 0.15f), RoundedCornerShape(8.dp))
-            .border(1.dp, color.copy(alpha = 0.4f), RoundedCornerShape(8.dp))
-            .padding(12.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Box(
-            modifier = Modifier
-                .size(10.dp)
-                .clip(CircleShape)
-                .background(color)
-        )
-        Spacer(modifier = Modifier.width(10.dp))
-        Text(text, style = TextStyle(fontSize = 11.sp, color = color, fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
     }
 }
 
@@ -297,13 +232,13 @@ fun ProfileListItem(
 @Composable
 fun ProfileDetailCard(profile: DeviceAcousticProfile) {
     Column {
-        DetailRow("Manufacturer", profile.manufacturer)
-        DetailRow("Model", profile.model)
-        DetailRow("Device", profile.androidDevice)
-        DetailRow("Route", profile.outputRoute.name)
-        DetailRow("Sample Rates", profile.supportedSampleRates.joinToString(", ") { "${it/1000}kHz" })
-        DetailRow("Points", profile.measuredResponses.size.toString())
-        DetailRow("Authority", profile.authority.name)
+        SharedDetailRow("Manufacturer", profile.manufacturer)
+        SharedDetailRow("Model", profile.model)
+        SharedDetailRow("Device", profile.androidDevice)
+        SharedDetailRow("Route", profile.outputRoute.name)
+        SharedDetailRow("Sample Rates", profile.supportedSampleRates.joinToString(", ") { "${it/1000}kHz" })
+        SharedDetailRow("Points", profile.measuredResponses.size.toString())
+        SharedDetailRow("Authority", profile.authority.name)
 
         if (profile.measuredResponses.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
@@ -318,16 +253,5 @@ fun ProfileDetailCard(profile: DeviceAcousticProfile) {
                 }
             }
         }
-    }
-}
-
-@Composable
-fun DetailRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(label, style = TextStyle(fontSize = 10.sp, color = Color.Gray))
-        Text(value, style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan, fontWeight = FontWeight.Medium))
     }
 }

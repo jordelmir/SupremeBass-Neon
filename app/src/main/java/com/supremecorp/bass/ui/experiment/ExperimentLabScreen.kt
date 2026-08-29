@@ -26,6 +26,12 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.supremecorp.bass.domain.model.AcousticExperiment
 import com.supremecorp.bass.domain.model.ExperimentStatus
 import com.supremecorp.bass.domain.model.ExperimentType
+import com.supremecorp.bass.ui.components.NeonScreenTitle
+import com.supremecorp.bass.ui.components.NeonCard
+import com.supremecorp.bass.ui.components.NeonButton
+import com.supremecorp.bass.ui.components.NeonSectionHeader
+import com.supremecorp.bass.ui.components.DetailRow as SharedDetailRow
+import com.supremecorp.bass.ui.components.MatrixRain
 import com.supremecorp.bass.ui.theme.TitanColors
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -36,56 +42,28 @@ fun ExperimentLabScreen(
     val state by viewModel.state.collectAsState()
     var showNewExperimentDialog by remember { mutableStateOf(false) }
 
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(TitanColors.AbsoluteBlack)
-            .verticalScroll(rememberScrollState())
-            .padding(16.dp)
-    ) {
-        Text(
-            text = "EXPERIMENT LAB",
-            style = TextStyle(
-                fontSize = 24.sp,
-                fontWeight = FontWeight.Black,
-                color = TitanColors.NeonCyan,
-                letterSpacing = 4.sp,
-                shadow = Shadow(
-                    color = TitanColors.NeonCyan.copy(alpha = 0.6f),
-                    offset = Offset.Zero,
-                    blurRadius = 12f
-                )
-            )
+    Box(modifier = Modifier.fillMaxSize().background(TitanColors.AbsoluteBlack)) {
+        MatrixRain(
+            modifier = Modifier.fillMaxSize(),
+            color = TitanColors.NeonCyan.copy(alpha = 0.12f)
         )
-
-        Spacer(modifier = Modifier.height(4.dp))
-
-        Text(
-            text = "Acoustic experiments — digital signal only, no physical measurements claimed",
-            style = TextStyle(
-                fontSize = 9.sp,
-                color = TitanColors.NeonCyan.copy(alpha = 0.5f),
-                letterSpacing = 1.sp
-            )
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(16.dp)
+        ) {
+        NeonScreenTitle(
+            title = "EXPERIMENT LAB",
+            subtitle = "Acoustic experiments — digital signal only, no physical measurements claimed"
         )
-
-        Spacer(modifier = Modifier.height(16.dp))
 
         // New experiment button
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Button(
-                onClick = { showNewExperimentDialog = true },
-                modifier = Modifier.weight(1f).height(48.dp),
-                colors = ButtonDefaults.buttonColors(containerColor = TitanColors.RadioactiveGreen),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Icon(Icons.Default.Add, contentDescription = null, tint = TitanColors.AbsoluteBlack)
-                Spacer(modifier = Modifier.width(8.dp))
-                Text("NEW EXPERIMENT", fontWeight = FontWeight.Bold, color = TitanColors.AbsoluteBlack)
-            }
+            NeonButton(text = "NEW EXPERIMENT", onClick = { showNewExperimentDialog = true }, modifier = Modifier.weight(1f), color = TitanColors.RadioactiveGreen)
         }
 
         Spacer(modifier = Modifier.height(16.dp))
@@ -93,12 +71,7 @@ fun ExperimentLabScreen(
         // Running experiment
         state.currentExperiment?.let { experiment ->
             if (experiment.status == ExperimentStatus.RUNNING || experiment.status == ExperimentStatus.PAUSED) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0A0A)),
-                    shape = RoundedCornerShape(12.dp)
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
+                NeonCard(glowColor = TitanColors.RadioactiveGreen) {
                         Text("RUNNING", style = TextStyle(fontSize = 10.sp, color = TitanColors.RadioactiveGreen, fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(experiment.name, style = TextStyle(fontSize = 14.sp, color = Color.White, fontWeight = FontWeight.Bold))
@@ -133,20 +106,14 @@ fun ExperimentLabScreen(
                                 shape = RoundedCornerShape(8.dp)
                             ) { Text("ABORT", fontSize = 10.sp, color = Color.White) }
                         }
-                    }
                 }
                 Spacer(modifier = Modifier.height(16.dp))
             }
         }
 
         // Experiment history
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0A0A)),
-            shape = RoundedCornerShape(12.dp)
-        ) {
-            Column(modifier = Modifier.padding(16.dp)) {
-                Text("EXPERIMENTS", style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
+        NeonCard(glowColor = TitanColors.NeonCyan) {
+                NeonSectionHeader(text = "EXPERIMENTS")
                 Spacer(modifier = Modifier.height(8.dp))
 
                 if (state.experiments.isEmpty()) {
@@ -167,26 +134,20 @@ fun ExperimentLabScreen(
                         }
                     }
                 }
-            }
         }
 
         // Selected experiment detail
         state.selectedExperiment?.let { experiment ->
             Spacer(modifier = Modifier.height(16.dp))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF0A0A0A)),
-                shape = RoundedCornerShape(12.dp)
-            ) {
-                Column(modifier = Modifier.padding(16.dp)) {
-                    Text("EXPERIMENT DETAIL", style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold, letterSpacing = 2.sp))
+            NeonCard(glowColor = TitanColors.NeonCyan) {
+                    NeonSectionHeader(text = "EXPERIMENT DETAIL")
                     Spacer(modifier = Modifier.height(8.dp))
                     ExperimentDetailCard(experiment = experiment)
-                }
             }
         }
 
         Spacer(modifier = Modifier.height(24.dp))
+    }
     }
 
     if (showNewExperimentDialog) {
@@ -316,22 +277,22 @@ fun ExperimentListItem(
 @Composable
 fun ExperimentDetailCard(experiment: AcousticExperiment) {
     Column {
-        DetailRow("Name", experiment.name)
-        DetailRow("Type", experiment.type.name)
-        DetailRow("Status", experiment.status.name)
-        DetailRow("Protocol", "v${experiment.protocolVersion}")
-        DetailRow("Steps", "${experiment.currentStep}/${experiment.stepCount}")
-        DetailRow("Dwell", "${experiment.dwellMs}ms")
-        DetailRow("Repeats", experiment.repeatsPerStep.toString())
-        DetailRow("Observations", experiment.observations.size.toString())
+        SharedDetailRow("Name", experiment.name)
+        SharedDetailRow("Type", experiment.type.name)
+        SharedDetailRow("Status", experiment.status.name)
+        SharedDetailRow("Protocol", "v${experiment.protocolVersion}")
+        SharedDetailRow("Steps", "${experiment.currentStep}/${experiment.stepCount}")
+        SharedDetailRow("Dwell", "${experiment.dwellMs}ms")
+        SharedDetailRow("Repeats", experiment.repeatsPerStep.toString())
+        SharedDetailRow("Observations", experiment.observations.size.toString())
 
         experiment.result?.let { result ->
             Spacer(modifier = Modifier.height(8.dp))
             Text("RESULT", style = TextStyle(fontSize = 9.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold))
             Spacer(modifier = Modifier.height(4.dp))
-            DetailRow("Peak Gain", "${String.format("%.2f", result.peakGainDb)} dB")
-            DetailRow("RMS Gain", "${String.format("%.2f", result.rmsGainDb)} dB")
-            DetailRow("Duration", "${result.durationMs / 1000}s")
+            SharedDetailRow("Peak Gain", "${String.format("%.2f", result.peakGainDb)} dB")
+            SharedDetailRow("RMS Gain", "${String.format("%.2f", result.rmsGainDb)} dB")
+            SharedDetailRow("Duration", "${result.durationMs / 1000}s")
             Text(result.summary, style = TextStyle(fontSize = 9.sp, color = Color.Gray))
         }
 
@@ -342,13 +303,3 @@ fun ExperimentDetailCard(experiment: AcousticExperiment) {
     }
 }
 
-@Composable
-fun DetailRow(label: String, value: String) {
-    Row(
-        modifier = Modifier.fillMaxWidth().padding(vertical = 2.dp),
-        horizontalArrangement = Arrangement.SpaceBetween
-    ) {
-        Text(label, style = TextStyle(fontSize = 10.sp, color = Color.Gray))
-        Text(value, style = TextStyle(fontSize = 10.sp, color = TitanColors.NeonCyan, fontWeight = FontWeight.Medium))
-    }
-}
