@@ -26,14 +26,15 @@ import com.supremecorp.bass.ui.theme.TitanColors
  */
 @Composable
 fun SpectrumAnalyzer(
-    magnitudes: List<Double>,
-    sampleRate: Int,
-    fftSize: Int,
+    spectrumData: FloatArray,
     modifier: Modifier = Modifier,
     peakHold: Boolean = true,
     showGrid: Boolean = true,
     showLabels: Boolean = true
 ) {
+    val magnitudes = spectrumData.map { it.toDouble() }
+    val sampleRate = 48000
+    val fftSize = magnitudes.size * 2
     val textMeasurer = rememberTextMeasurer()
 
     // Peak hold state

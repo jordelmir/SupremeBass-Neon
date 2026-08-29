@@ -37,7 +37,9 @@ data class SignalLabState(
     val telemetry: SignalTelemetry? = null,
     val exportedJson: String? = null,
     // DSP Controls
-    val dspControls: DSPControlsState = DSPControlsState()
+    val dspState: DSPControlsState = DSPControlsState(),
+    // Spectrum data
+    val spectrumData: FloatArray = FloatArray(128) { -80f }
 )
 
 class SignalLabViewModel(application: Application) : AndroidViewModel(application) {
@@ -87,45 +89,45 @@ class SignalLabViewModel(application: Application) : AndroidViewModel(applicatio
     fun setBassBoost(db: Float) {
         signalEngine.dsp.bassBoost.setBoost(db)
         _state.value = _state.value.copy(
-            dspControls = _state.value.dspControls.copy(bassBoostDb = db)
+            dspState = _state.value.dspState.copy(bassBoostDb = db)
         )
     }
 
     fun setBassCutoff(hz: Double) {
         signalEngine.dsp.bassBoost.setCutoffFrequency(hz)
         _state.value = _state.value.copy(
-            dspControls = _state.value.dspControls.copy(bassCutoffHz = hz)
+            dspState = _state.value.dspState.copy(bassCutoffHz = hz)
         )
     }
 
     fun setBassEnabled(enabled: Boolean) {
         signalEngine.dsp.bassBoost.setEnabled(enabled)
         _state.value = _state.value.copy(
-            dspControls = _state.value.dspControls.copy(bassEnabled = enabled)
+            dspState = _state.value.dspState.copy(bassEnabled = enabled)
         )
     }
 
     fun setEQBandGain(bandIndex: Int, gainDb: Double) {
         signalEngine.dsp.eq.setBandGain(bandIndex, gainDb)
-        val newBands = _state.value.dspControls.eqBands.toMutableList()
+        val newBands = _state.value.dspState.eqBands.toMutableList()
         if (bandIndex in newBands.indices) {
             newBands[bandIndex] = gainDb
         }
         _state.value = _state.value.copy(
-            dspControls = _state.value.dspControls.copy(eqBands = newBands)
+            dspState = _state.value.dspState.copy(eqBands = newBands)
         )
     }
 
     fun setEQEnabled(enabled: Boolean) {
         _state.value = _state.value.copy(
-            dspControls = _state.value.dspControls.copy(eqEnabled = enabled)
+            dspState = _state.value.dspState.copy(eqEnabled = enabled)
         )
     }
 
     fun applyEQPreset(preset: ParametricEQ.EQPreset) {
         signalEngine.dsp.eq.applyPreset(preset)
         _state.value = _state.value.copy(
-            dspControls = _state.value.dspControls.copy(
+            dspState = _state.value.dspState.copy(
                 eqPreset = preset,
                 eqBands = signalEngine.dsp.eq.getBands().map { it.gainDb }
             )
@@ -135,21 +137,21 @@ class SignalLabViewModel(application: Application) : AndroidViewModel(applicatio
     fun setVirtualizerWidth(width: Float) {
         signalEngine.dsp.virtualizer.setWidth(width)
         _state.value = _state.value.copy(
-            dspControls = _state.value.dspControls.copy(virtualizerWidth = width)
+            dspState = _state.value.dspState.copy(virtualizerWidth = width)
         )
     }
 
     fun setVirtualizerCrossfeed(cf: Float) {
         signalEngine.dsp.virtualizer.setCrossfeed(cf)
         _state.value = _state.value.copy(
-            dspControls = _state.value.dspControls.copy(virtualizerCrossfeed = cf)
+            dspState = _state.value.dspState.copy(virtualizerCrossfeed = cf)
         )
     }
 
     fun setVirtualizerEnabled(enabled: Boolean) {
         signalEngine.dsp.virtualizer.setEnabled(enabled)
         _state.value = _state.value.copy(
-            dspControls = _state.value.dspControls.copy(virtualizerEnabled = enabled)
+            dspState = _state.value.dspState.copy(virtualizerEnabled = enabled)
         )
     }
 
@@ -275,7 +277,7 @@ class SignalLabViewModel(application: Application) : AndroidViewModel(applicatio
                 _state.value = _state.value.copy(
                     engineState = signalEngine.getState(),
                     telemetry = signalEngine.getTelemetry(),
-                    dspControls = _state.value.dspControls.copy(
+                    dspState = _state.value.dspState.copy(
                         dspProcessTimeUs = stats.processTimeUs,
                         clippedSamples = stats.clippedSamples
                     )

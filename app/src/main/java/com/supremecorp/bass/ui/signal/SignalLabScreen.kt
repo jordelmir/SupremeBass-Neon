@@ -38,6 +38,8 @@ import com.supremecorp.bass.ui.components.NeonChip
 import com.supremecorp.bass.ui.components.DetailRow as SharedDetailRow
 import com.supremecorp.bass.ui.components.EngineStateIndicator as SharedEngineStateIndicator
 import com.supremecorp.bass.ui.components.MatrixRain
+import com.supremecorp.bass.ui.components.DSPControlsPanel
+import com.supremecorp.bass.ui.components.SpectrumAnalyzer
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
@@ -288,6 +290,36 @@ fun SignalLabScreen(
                 )
             }
         }
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // ── DSP Controls Panel ──
+        NeonSectionHeader(text = "DSP PROCESSING")
+        Spacer(modifier = Modifier.height(8.dp))
+        DSPControlsPanel(
+            state = state.dspState,
+            onBassBoostChanged = viewModel::setBassBoost,
+            onBassCutoffChanged = viewModel::setBassCutoff,
+            onBassEnabledChanged = viewModel::setBassEnabled,
+            onEQBandChanged = viewModel::setEQBandGain,
+            onEQEnabledChanged = viewModel::setEQEnabled,
+            onEQPresetChanged = viewModel::applyEQPreset,
+            onVirtualizerWidthChanged = viewModel::setVirtualizerWidth,
+            onVirtualizerCrossfeedChanged = viewModel::setVirtualizerCrossfeed,
+            onVirtualizerEnabledChanged = viewModel::setVirtualizerEnabled
+        )
+
+        Spacer(modifier = Modifier.height(20.dp))
+
+        // ── Real-time Spectrum Analyzer ──
+        NeonSectionHeader(text = "SPECTRUM ANALYZER")
+        Spacer(modifier = Modifier.height(8.dp))
+        SpectrumAnalyzer(
+            spectrumData = state.spectrumData,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(200.dp)
+        )
 
         Spacer(modifier = Modifier.height(24.dp))
         }
