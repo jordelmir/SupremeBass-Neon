@@ -60,9 +60,6 @@ fun DeviceLabScreen(
             subtitle = "Frequency response characterization — digital signal only, no calibrated mic"
         )
 
-        // Engine state
-        SharedEngineStateIndicator(state.engineState)
-
         Spacer(modifier = Modifier.height(16.dp))
 
         // Characterization controls

@@ -35,6 +35,11 @@ class SignalEngine(
     private var wakeLock: PowerManager.WakeLock? = null
     private var currentConfig: SignalConfig? = null
 
+    // Safety ramp state
+    private var rampSamplesRemaining: Int = 0
+    private var rampTotalSamples: Int = 0
+    private var isRampingUp: Boolean = true
+
     private val routeChangeListener = RouteChangeListener { _, newRoute ->
         safetyController.setRoute(newRoute)
         if (newRoute == OutputRoute.WIRED_HEADPHONES || newRoute == OutputRoute.BLUETOOTH) {
@@ -97,6 +102,11 @@ class SignalEngine(
         routeMonitor.start()
         safetyController.onSessionStart()
 
+        // Initialize safety ramp
+        rampTotalSamples = safetyController.getRampUpSamples(audioConfig.sampleRate)
+        rampSamplesRemaining = rampTotalSamples
+        isRampingUp = true
+
         state.set(SignalEngineState.Running(session))
 
         audioThread = Thread({
@@ -120,16 +130,41 @@ class SignalEngine(
     ) {
         val bufferFrames = 1024
         val buffer = FloatArray(bufferFrames * audioConfig.channelCount)
+        var isRampingDown = false
+        var rampDownRemaining = 0
 
         while (state.get() is SignalEngineState.Running) {
             val safetyStop = safetyController.shouldStop()
             if (safetyStop != null) {
                 AppLogger.w("SignalEngine", "Safety stop: $safetyStop")
-                break
+                // Initiate ramp-down before stopping
+                isRampingDown = true
+                rampDownRemaining = safetyController.getRampDownSamples(audioConfig.sampleRate)
             }
 
             generator.render(buffer, bufferFrames, config, audioConfig.sampleRate)
             limiter.process(buffer, bufferFrames)
+
+            // Apply safety ramp
+            val rampSamples = when {
+                isRampingUp && rampSamplesRemaining > 0 -> {
+                    val samplesThisBlock = minOf(bufferFrames, rampSamplesRemaining)
+                    rampSamplesRemaining -= samplesThisBlock
+                    if (rampSamplesRemaining <= 0) isRampingUp = false
+                    samplesThisBlock
+                }
+                isRampingDown && rampDownRemaining > 0 -> {
+                    val samplesThisBlock = minOf(bufferFrames, rampDownRemaining)
+                    rampDownRemaining -= samplesThisBlock
+                    samplesThisBlock
+                }
+                else -> 0
+            }
+
+            if (rampSamples > 0) {
+                applyRampToBuffer(buffer, bufferFrames, audioConfig.channelCount,
+                    rampSamples, rampTotalSamples, isRampingUp)
+            }
 
             when (val result = backend.write(buffer, bufferFrames)) {
                 is AudioBackendResult.Failure -> {
@@ -139,9 +174,43 @@ class SignalEngine(
                 }
                 is AudioBackendResult.Success -> { /* continue */ }
             }
+
+            // If ramp-down complete, stop
+            if (isRampingDown && rampDownRemaining <= 0) {
+                AppLogger.i("SignalEngine", "Ramp-down complete, stopping")
+                break
+            }
         }
 
         handler.post { stopInternal() }
+    }
+
+    private fun applyRampToBuffer(
+        buffer: FloatArray,
+        frameCount: Int,
+        channelCount: Int,
+        rampSamples: Int,
+        totalRampSamples: Int,
+        isRampUp: Boolean
+    ) {
+        if (totalRampSamples <= 0) return
+
+        for (i in 0 until frameCount) {
+            val globalSample = if (isRampUp) {
+                totalRampSamples - rampSamples + i
+            } else {
+                rampSamples - i
+            }
+
+            val gain = (globalSample.toFloat() / totalRampSamples).coerceIn(0.0f, 1.0f)
+
+            for (ch in 0 until channelCount) {
+                val sampleIndex = i * channelCount + ch
+                if (sampleIndex < buffer.size) {
+                    buffer[sampleIndex] *= gain
+                }
+            }
+        }
     }
 
     fun stop() {

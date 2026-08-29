@@ -7,13 +7,12 @@ import androidx.lifecycle.viewModelScope
 import com.supremecorp.bass.core.logging.AppLogger
 import com.supremecorp.bass.data.device.DeviceRepository
 import com.supremecorp.bass.data.device.DeviceDatabase
+import com.supremecorp.bass.domain.model.*
+import com.supremecorp.bass.dsp.Limiter
 import com.supremecorp.bass.dsp.SweepEngine
 import com.supremecorp.bass.dsp.SweepPlan
 import com.supremecorp.bass.dsp.SweepState
 import com.supremecorp.bass.dsp.SweepType
-import com.supremecorp.bass.domain.model.*
-import com.supremecorp.bass.signal.SignalEngine
-import com.supremecorp.bass.signal.SignalEngineState
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -36,7 +35,6 @@ data class DeviceLabState(
     val currentStep: Int = 0,
     val totalSteps: Int = 0,
     val measuredPoints: List<MeasuredPoint> = emptyList(),
-    val engineState: SignalEngineState = SignalEngineState.Idle,
     val savedProfiles: List<DeviceAcousticProfile> = emptyList(),
     val selectedProfile: DeviceAcousticProfile? = null,
     val error: String? = null
@@ -51,7 +49,6 @@ class DeviceLabViewModel(application: Application) : AndroidViewModel(applicatio
     private val _state = MutableStateFlow(DeviceLabState())
     val state: StateFlow<DeviceLabState> = _state.asStateFlow()
 
-    private val signalEngine = SignalEngine(application)
     private val sweepEngine = SweepEngine()
     private val deviceRepository: DeviceRepository
 
@@ -110,44 +107,54 @@ class DeviceLabViewModel(application: Application) : AndroidViewModel(applicatio
 
         sweepJob?.cancel()
         sweepJob = viewModelScope.launch(Dispatchers.Default) {
-            val audioConfig = AudioOutputConfig(sampleRate = 48_000)
+            val sampleRate = 48_000
+            val audioConfig = AudioOutputConfig(sampleRate = sampleRate)
+            val backend = com.supremecorp.bass.audio.backend.AndroidAudioTrackBackend()
+            val limiter = com.supremecorp.bass.dsp.Limiter()
             val buffer = FloatArray(1024)
 
-            val started = signalEngine.start(
-                SignalConfig(
-                    frequencyHz = plan.startHz,
-                    amplitude = plan.amplitude,
-                    waveform = plan.waveform
-                ),
-                audioConfig
-            )
-
-            if (!started) {
-                Log.e(TAG, "Failed to start signal engine for characterization")
+            val backendResult = backend.start(audioConfig)
+            if (backendResult is AudioBackendResult.Failure) {
+                Log.e(TAG, "Failed to start audio backend for characterization")
                 _state.value = _state.value.copy(
                     isCharacterizing = false,
-                    error = "Failed to start signal engine"
+                    error = "Failed to start audio backend"
                 )
                 return@launch
             }
 
-            Log.i(TAG, "Signal engine started, beginning sweep")
+            Log.i(TAG, "Audio backend started, beginning sweep")
 
             while (true) {
-                val sweepState = sweepEngine.render(buffer, 1024, 48_000)
+                val sweepState = sweepEngine.render(buffer, 1024, sampleRate)
                 val currentConfig = plan.getStepConfig(sweepEngine.getCurrentStep())
-                val telemetry = signalEngine.getTelemetry()
+
+                // Apply limiter to prevent clipping
+                limiter.process(buffer, 1024)
+
+                // Actually write the sweep buffer to the audio output
+                val writeResult = backend.write(buffer, 1024)
+                if (writeResult is AudioBackendResult.Failure) {
+                    Log.e(TAG, "Write failed during sweep")
+                    backend.stop()
+                    _state.value = _state.value.copy(
+                        isCharacterizing = false,
+                        error = "Audio write failed"
+                    )
+                    return@launch
+                }
+
+                // Read back peak/rms from limiter for telemetry
+                val measuredPoint = MeasuredPoint(
+                    frequencyHz = currentConfig.frequencyHz,
+                    requestedAmplitude = currentConfig.amplitude,
+                    peak = limiter.peak,
+                    rms = limiter.rms
+                )
 
                 when (sweepState) {
                     is SweepState.StepComplete -> {
-                        val measuredPoint = MeasuredPoint(
-                            frequencyHz = currentConfig.frequencyHz,
-                            requestedAmplitude = currentConfig.amplitude,
-                            peak = telemetry?.peak ?: 0f,
-                            rms = telemetry?.rms ?: 0f
-                        )
-
-                        Log.d(TAG, "Step ${sweepState.step + 1}/${plan.steps}: freq=${currentConfig.frequencyHz}Hz peak=${telemetry?.peak} rms=${telemetry?.rms}")
+                        Log.d(TAG, "Step ${sweepState.step + 1}/${plan.steps}: freq=${currentConfig.frequencyHz}Hz peak=${limiter.peak} rms=${limiter.rms}")
 
                         _state.value = _state.value.copy(
                             currentFrequency = currentConfig.frequencyHz,
@@ -158,7 +165,7 @@ class DeviceLabViewModel(application: Application) : AndroidViewModel(applicatio
                     }
                     is SweepState.Complete -> {
                         Log.i(TAG, "Sweep complete: ${_state.value.measuredPoints.size} points measured")
-                        signalEngine.stop()
+                        backend.stop()
                         saveCharacterization()
                         _state.value = _state.value.copy(
                             isCharacterizing = false,
@@ -177,7 +184,6 @@ class DeviceLabViewModel(application: Application) : AndroidViewModel(applicatio
         sweepJob?.cancel()
         sweepJob = null
         sweepEngine.stop()
-        signalEngine.stop()
         _state.value = _state.value.copy(isCharacterizing = false)
     }
 
@@ -227,6 +233,5 @@ class DeviceLabViewModel(application: Application) : AndroidViewModel(applicatio
         Log.i(TAG, "DeviceLabViewModel cleared")
         super.onCleared()
         sweepJob?.cancel()
-        signalEngine.release()
     }
 }
