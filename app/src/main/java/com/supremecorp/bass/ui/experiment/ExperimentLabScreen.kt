@@ -286,14 +286,60 @@ fun ExperimentDetailCard(experiment: AcousticExperiment) {
         SharedDetailRow("Repeats", experiment.repeatsPerStep.toString())
         SharedDetailRow("Observations", experiment.observations.size.toString())
 
-        experiment.result?.let { result ->
+        // Experiment Variables
+        if (experiment.variables.isNotEmpty()) {
             Spacer(modifier = Modifier.height(8.dp))
-            Text("RESULT", style = TextStyle(fontSize = 9.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold))
+            Text("VARIABLES", style = TextStyle(fontSize = 9.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold))
             Spacer(modifier = Modifier.height(4.dp))
-            SharedDetailRow("Peak Gain", "${String.format("%.2f", result.peakGainDb)} dB")
-            SharedDetailRow("RMS Gain", "${String.format("%.2f", result.rmsGainDb)} dB")
-            SharedDetailRow("Duration", "${result.durationMs / 1000}s")
-            Text(result.summary, style = TextStyle(fontSize = 9.sp, color = Color.Gray))
+            experiment.variables.forEach { variable ->
+                SharedDetailRow(
+                    variable.name,
+                    "${String.format("%.1f", variable.min)} - ${String.format("%.1f", variable.max)} ${variable.unit}"
+                )
+            }
+        }
+
+        experiment.result?.let { result ->
+            Spacer(modifier = Modifier.height(12.dp))
+            Text("RESULTS", style = TextStyle(fontSize = 10.sp, color = TitanColors.RadioactiveGreen, fontWeight = FontWeight.Bold, letterSpacing = 1.sp))
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Main metrics
+            NeonCard(glowColor = TitanColors.RadioactiveGreen.copy(alpha = 0.5f)) {
+                SharedDetailRow("Peak Gain", "${String.format("%.2f", result.peakGainDb)} dB")
+                SharedDetailRow("RMS Gain", "${String.format("%.2f", result.rmsGainDb)} dB")
+                SharedDetailRow("Duration", "${result.durationMs / 1000}s")
+                result.thdPercent?.let { thd ->
+                    SharedDetailRow("THD", "${String.format("%.3f", thd)}%")
+                }
+            }
+
+            // Summary
+            Spacer(modifier = Modifier.height(8.dp))
+            Text("SUMMARY", style = TextStyle(fontSize = 9.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold))
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(result.summary, style = TextStyle(fontSize = 11.sp, color = Color.Gray))
+
+            // Observations preview
+            if (result.observations.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(8.dp))
+                Text("OBSERVATIONS (${result.observations.size})", style = TextStyle(fontSize = 9.sp, color = TitanColors.NeonCyan.copy(alpha = 0.7f), fontWeight = FontWeight.Bold))
+                Spacer(modifier = Modifier.height(4.dp))
+                Column {
+                    result.observations.takeLast(5).reversed().forEach { obs ->
+                        Text(
+                            text = "Step ${obs.variable}: ${obs.frequencyHz}Hz → Peak=${String.format("%.4f", obs.measuredPeak)} RMS=${String.format("%.4f", obs.measuredRms)}",
+                            style = TextStyle(fontSize = 9.sp, color = Color.Gray)
+                        )
+                    }
+                    if (result.observations.size > 5) {
+                        Text(
+                            text = "... and ${result.observations.size - 5} more observations",
+                            style = TextStyle(fontSize = 9.sp, color = Color.Gray.copy(alpha = 0.7f))
+                        )
+                    }
+                }
+            }
         }
 
         experiment.errorMessage?.let { err ->
