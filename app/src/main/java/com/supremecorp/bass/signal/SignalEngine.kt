@@ -13,6 +13,7 @@ import com.supremecorp.bass.audio.safety.RouteChangeListener
 import com.supremecorp.bass.audio.safety.SafetyStopReason
 import com.supremecorp.bass.core.logging.AppLogger
 import com.supremecorp.bass.domain.model.*
+import com.supremecorp.bass.dsp.AudioDSPChain
 import com.supremecorp.bass.dsp.Limiter
 import com.supremecorp.bass.dsp.Oscillator
 import com.supremecorp.bass.dsp.SignalGenerator
@@ -26,9 +27,12 @@ class SignalEngine(
 ) {
     private val state = AtomicReference<SignalEngineState>(SignalEngineState.Idle)
     private val generator = SignalGenerator(Oscillator())
-    private val limiter = Limiter()
+    private val dspChain = AudioDSPChain()
     private val safetyController = AcousticSafetyController()
     private val routeMonitor = AudioRouteMonitor(context)
+
+    /** Access the DSP chain for UI controls (EQ, bass boost, virtualizer) */
+    val dsp: AudioDSPChain get() = dspChain
 
     private val handler = Handler(Looper.getMainLooper())
     private var audioThread: Thread? = null
@@ -73,7 +77,8 @@ class SignalEngine(
 
         generator.configure(audioConfig.sampleRate)
         generator.reset()
-        limiter.reset()
+        dspChain.configure(audioConfig.sampleRate)
+        dspChain.reset()
         safetyController.setRoute(routeMonitor.getCurrentRoute())
         safetyController.routeInterlockEnabled = AudioSettingsPrefs.routeInterlock(context)
 
@@ -143,7 +148,13 @@ class SignalEngine(
             }
 
             generator.render(buffer, bufferFrames, config, audioConfig.sampleRate)
-            limiter.process(buffer, bufferFrames)
+
+            // Process through DSP chain (Bass → EQ → Virtualizer → Limiter)
+            if (audioConfig.channelCount == 2) {
+                dspChain.processStereo(buffer, bufferFrames)
+            } else {
+                dspChain.processMono(buffer, bufferFrames)
+            }
 
             // Apply safety ramp
             val rampSamples = when {
@@ -269,11 +280,11 @@ class SignalEngine(
             waveform = session.config.waveform,
             frequencyHz = session.config.frequencyHz,
             amplitude = session.config.amplitude,
-            peak = limiter.peak,
-            rms = limiter.rms,
+            peak = dspChain.limiter.peak,
+            rms = dspChain.limiter.rms,
             durationMs = elapsed,
             audioRoute = session.route,
-            underruns = 0,
+            underruns = dspChain.limiter.clippedSamples,
             terminationReason = state.get().name()
         )
     }

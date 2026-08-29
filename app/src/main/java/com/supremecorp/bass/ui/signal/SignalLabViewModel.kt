@@ -5,6 +5,7 @@ import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.supremecorp.bass.core.logging.AppLogger
 import com.supremecorp.bass.domain.model.*
+import com.supremecorp.bass.dsp.ParametricEQ
 import com.supremecorp.bass.dsp.SweepEngine
 import com.supremecorp.bass.dsp.SweepPlan
 import com.supremecorp.bass.dsp.SweepState
@@ -34,7 +35,9 @@ data class SignalLabState(
     val currentSweepStep: Int = 0,
     val totalSweepSteps: Int = 0,
     val telemetry: SignalTelemetry? = null,
-    val exportedJson: String? = null
+    val exportedJson: String? = null,
+    // DSP Controls
+    val dspControls: DSPControlsState = DSPControlsState()
 )
 
 class SignalLabViewModel(application: Application) : AndroidViewModel(application) {
@@ -77,6 +80,77 @@ class SignalLabViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun updateSampleRate(rate: Int) {
         _state.value = _state.value.copy(sampleRate = rate)
+    }
+
+    // ── DSP Controls ──
+
+    fun setBassBoost(db: Float) {
+        signalEngine.dsp.bassBoost.setBoost(db)
+        _state.value = _state.value.copy(
+            dspControls = _state.value.dspControls.copy(bassBoostDb = db)
+        )
+    }
+
+    fun setBassCutoff(hz: Double) {
+        signalEngine.dsp.bassBoost.setCutoffFrequency(hz)
+        _state.value = _state.value.copy(
+            dspControls = _state.value.dspControls.copy(bassCutoffHz = hz)
+        )
+    }
+
+    fun setBassEnabled(enabled: Boolean) {
+        signalEngine.dsp.bassBoost.setEnabled(enabled)
+        _state.value = _state.value.copy(
+            dspControls = _state.value.dspControls.copy(bassEnabled = enabled)
+        )
+    }
+
+    fun setEQBandGain(bandIndex: Int, gainDb: Double) {
+        signalEngine.dsp.eq.setBandGain(bandIndex, gainDb)
+        val newBands = _state.value.dspControls.eqBands.toMutableList()
+        if (bandIndex in newBands.indices) {
+            newBands[bandIndex] = gainDb
+        }
+        _state.value = _state.value.copy(
+            dspControls = _state.value.dspControls.copy(eqBands = newBands)
+        )
+    }
+
+    fun setEQEnabled(enabled: Boolean) {
+        _state.value = _state.value.copy(
+            dspControls = _state.value.dspControls.copy(eqEnabled = enabled)
+        )
+    }
+
+    fun applyEQPreset(preset: ParametricEQ.EQPreset) {
+        signalEngine.dsp.eq.applyPreset(preset)
+        _state.value = _state.value.copy(
+            dspControls = _state.value.dspControls.copy(
+                eqPreset = preset,
+                eqBands = signalEngine.dsp.eq.getBands().map { it.gainDb }
+            )
+        )
+    }
+
+    fun setVirtualizerWidth(width: Float) {
+        signalEngine.dsp.virtualizer.setWidth(width)
+        _state.value = _state.value.copy(
+            dspControls = _state.value.dspControls.copy(virtualizerWidth = width)
+        )
+    }
+
+    fun setVirtualizerCrossfeed(cf: Float) {
+        signalEngine.dsp.virtualizer.setCrossfeed(cf)
+        _state.value = _state.value.copy(
+            dspControls = _state.value.dspControls.copy(virtualizerCrossfeed = cf)
+        )
+    }
+
+    fun setVirtualizerEnabled(enabled: Boolean) {
+        signalEngine.dsp.virtualizer.setEnabled(enabled)
+        _state.value = _state.value.copy(
+            dspControls = _state.value.dspControls.copy(virtualizerEnabled = enabled)
+        )
     }
 
     fun startSignal() {
@@ -197,9 +271,14 @@ class SignalLabViewModel(application: Application) : AndroidViewModel(applicatio
         viewModelScope.launch(Dispatchers.Default) {
             while (signalEngine.getState() is SignalEngineState.Running) {
                 kotlinx.coroutines.delay(100)
+                val stats = signalEngine.dsp.getStats()
                 _state.value = _state.value.copy(
                     engineState = signalEngine.getState(),
-                    telemetry = signalEngine.getTelemetry()
+                    telemetry = signalEngine.getTelemetry(),
+                    dspControls = _state.value.dspControls.copy(
+                        dspProcessTimeUs = stats.processTimeUs,
+                        clippedSamples = stats.clippedSamples
+                    )
                 )
             }
             _state.value = _state.value.copy(engineState = signalEngine.getState())
