@@ -4,10 +4,12 @@ import android.app.Application
 import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.supremecorp.bass.audio.input.AudioInputProcessor
 import com.supremecorp.bass.core.logging.AppLogger
 import com.supremecorp.bass.data.device.DeviceRepository
 import com.supremecorp.bass.data.device.DeviceDatabase
 import com.supremecorp.bass.domain.model.*
+import com.supremecorp.bass.dsp.*
 import com.supremecorp.bass.dsp.Limiter
 import com.supremecorp.bass.dsp.SweepEngine
 import com.supremecorp.bass.dsp.SweepPlan
@@ -37,7 +39,40 @@ data class DeviceLabState(
     val measuredPoints: List<MeasuredPoint> = emptyList(),
     val savedProfiles: List<DeviceAcousticProfile> = emptyList(),
     val selectedProfile: DeviceAcousticProfile? = null,
-    val error: String? = null
+    val error: String? = null,
+    // RT60 Measurement
+    val isMeasuringRT60: Boolean = false,
+    val rt60Progress: Float = 0f,
+    val rt60Result: RT60Result? = null,
+    // SPL Measurement
+    val isMeasuringSPL: Boolean = false,
+    val splProgress: Float = 0f,
+    val splResult: SPLResult? = null,
+    // THD Measurement
+    val isMeasuringTHD: Boolean = false,
+    val thdProgress: Float = 0f,
+    val thdResult: THDResult? = null
+)
+
+data class RT60Result(
+    val rt60Seconds: Double,
+    val edtSeconds: Double,
+    val roomQuality: String,
+    val confidence: Double
+)
+
+data class SPLResult(
+    val peakDbFS: Double,
+    val rmsDbFS: Double,
+    val integratedLoudness: Double,
+    val dynamicRange: Double
+)
+
+data class THDResult(
+    val thdPercent: Double,
+    val thdPlusNPercent: Double,
+    val fundamentalHz: Double,
+    val qualityRating: String
 )
 
 class DeviceLabViewModel(application: Application) : AndroidViewModel(application) {
@@ -227,6 +262,254 @@ class DeviceLabViewModel(application: Application) : AndroidViewModel(applicatio
 
     fun selectProfile(profile: DeviceAcousticProfile?) {
         _state.value = _state.value.copy(selectedProfile = profile)
+    }
+
+    // ── RT60 Measurement ──
+
+    fun startRT60Measurement() {
+        if (_state.value.isMeasuringRT60) return
+
+        val audioInput = AudioInputProcessor(getApplication())
+        if (!audioInput.hasPermission()) {
+            _state.value = _state.value.copy(error = "RECORD_AUDIO permission required")
+            return
+        }
+
+        _state.value = _state.value.copy(
+            isMeasuringRT60 = true,
+            rt60Progress = 0f,
+            rt60Result = null,
+            error = null
+        )
+
+        viewModelScope.launch(Dispatchers.Default) {
+            try {
+                // Generate impulse signal
+                val sampleRate = 48000
+                val impulseDuration = 0.1 // 100ms impulse
+                val impulseSamples = (sampleRate * impulseDuration).toInt()
+                val impulse = FloatArray(impulseSamples) { i ->
+                    if (i < impulseSamples / 10) {
+                        // White noise burst
+                        (Math.random() * 2 - 1).toFloat()
+                    } else {
+                        0f
+                    }
+                }
+
+                // Play impulse through speaker
+                val backend = com.supremecorp.bass.audio.backend.AndroidAudioTrackBackend()
+                val audioConfig = AudioOutputConfig(sampleRate = sampleRate)
+                backend.start(audioConfig)
+                backend.write(impulse, impulseSamples)
+                backend.stop()
+
+                // Wait for impulse to finish
+                kotlinx.coroutines.delay(200)
+
+                // Record response
+                audioInput.start()
+                val recordingDuration = 3.0 // 3 seconds of recording
+                val totalSamples = (sampleRate * recordingDuration).toInt()
+                val recording = FloatArray(totalSamples)
+                var samplesRead = 0
+
+                while (samplesRead < totalSamples && audioInput.isRecording()) {
+                    val buffer = FloatArray(1024)
+                    val read = audioInput.read(buffer)
+                    if (read > 0) {
+                        val copyLength = minOf(read, totalSamples - samplesRead)
+                        System.arraycopy(buffer, 0, recording, samplesRead, copyLength)
+                        samplesRead += copyLength
+                    }
+                }
+                audioInput.stop()
+
+                // Analyze RT60
+                val rt60Estimator = RT60Estimator()
+                val analysis = rt60Estimator.estimateFromImpulseResponse(recording, sampleRate)
+
+                _state.value = _state.value.copy(
+                    isMeasuringRT60 = false,
+                    rt60Progress = 1f,
+                    rt60Result = RT60Result(
+                        rt60Seconds = analysis.rt60Ms / 1000.0,
+                        edtSeconds = analysis.earlyDecayMs / 1000.0,
+                        roomQuality = if (analysis.confidence > 0.7) "Good" else "Fair",
+                        confidence = analysis.confidence
+                    )
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "RT60 measurement failed", e)
+                _state.value = _state.value.copy(
+                    isMeasuringRT60 = false,
+                    error = "RT60 measurement failed: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun stopRT60Measurement() {
+        _state.value = _state.value.copy(isMeasuringRT60 = false)
+    }
+
+    // ── SPL Measurement ──
+
+    fun startSPLMeasurement() {
+        if (_state.value.isMeasuringSPL) return
+
+        val audioInput = AudioInputProcessor(getApplication())
+        if (!audioInput.hasPermission()) {
+            _state.value = _state.value.copy(error = "RECORD_AUDIO permission required")
+            return
+        }
+
+        _state.value = _state.value.copy(
+            isMeasuringSPL = true,
+            splProgress = 0f,
+            splResult = null,
+            error = null
+        )
+
+        viewModelScope.launch(Dispatchers.Default) {
+            try {
+                audioInput.start()
+                val sampleRate = audioInput.getSampleRate()
+                val duration = 5.0 // 5 seconds of recording
+                val totalSamples = (sampleRate * duration).toInt()
+                val recording = FloatArray(totalSamples)
+                var samplesRead = 0
+
+                while (samplesRead < totalSamples && audioInput.isRecording()) {
+                    val buffer = FloatArray(1024)
+                    val read = audioInput.read(buffer)
+                    if (read > 0) {
+                        val copyLength = minOf(read, totalSamples - samplesRead)
+                        System.arraycopy(buffer, 0, recording, samplesRead, copyLength)
+                        samplesRead += copyLength
+                        _state.value = _state.value.copy(splProgress = samplesRead.toFloat() / totalSamples)
+                    }
+                }
+                audioInput.stop()
+
+                // Analyze SPL
+                val splEstimator = SPLEstimator()
+                val analysis = splEstimator.estimate(recording, sampleRate)
+
+                _state.value = _state.value.copy(
+                    isMeasuringSPL = false,
+                    splProgress = 1f,
+                    splResult = SPLResult(
+                        peakDbFS = analysis.peakDb,
+                        rmsDbFS = analysis.rmsDb,
+                        integratedLoudness = analysis.loudnessLUFS,
+                        dynamicRange = analysis.dynamicRangeDb
+                    )
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "SPL measurement failed", e)
+                _state.value = _state.value.copy(
+                    isMeasuringSPL = false,
+                    error = "SPL measurement failed: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun stopSPLMeasurement() {
+        _state.value = _state.value.copy(isMeasuringSPL = false)
+    }
+
+    // ── THD Measurement ──
+
+    fun startTHDMeasurement() {
+        if (_state.value.isMeasuringTHD) return
+
+        val audioInput = AudioInputProcessor(getApplication())
+        if (!audioInput.hasPermission()) {
+            _state.value = _state.value.copy(error = "RECORD_AUDIO permission required")
+            return
+        }
+
+        _state.value = _state.value.copy(
+            isMeasuringTHD = true,
+            thdProgress = 0f,
+            thdResult = null,
+            error = null
+        )
+
+        viewModelScope.launch(Dispatchers.Default) {
+            try {
+                val sampleRate = 48000
+                val testFrequency = 1000.0 // 1kHz test tone
+                val duration = 2.0 // 2 seconds
+                val totalSamples = (sampleRate * duration).toInt()
+
+                // Generate test tone
+                val testTone = FloatArray(totalSamples) { i ->
+                    (0.5 * kotlin.math.sin(2.0 * Math.PI * testFrequency * i / sampleRate)).toFloat()
+                }
+
+                // Play test tone
+                val backend = com.supremecorp.bass.audio.backend.AndroidAudioTrackBackend()
+                val audioConfig = AudioOutputConfig(sampleRate = sampleRate)
+                backend.start(audioConfig)
+                backend.write(testTone, totalSamples)
+                backend.stop()
+
+                // Wait for tone to finish
+                kotlinx.coroutines.delay(100)
+
+                // Record response
+                audioInput.start()
+                val recordingDuration = 2.0
+                val recordingSamples = (sampleRate * recordingDuration).toInt()
+                val recording = FloatArray(recordingSamples)
+                var samplesRead = 0
+
+                while (samplesRead < recordingSamples && audioInput.isRecording()) {
+                    val buffer = FloatArray(1024)
+                    val read = audioInput.read(buffer)
+                    if (read > 0) {
+                        val copyLength = minOf(read, recordingSamples - samplesRead)
+                        System.arraycopy(buffer, 0, recording, samplesRead, copyLength)
+                        samplesRead += copyLength
+                        _state.value = _state.value.copy(thdProgress = samplesRead.toFloat() / recordingSamples)
+                    }
+                }
+                audioInput.stop()
+
+                // Analyze THD
+                val thdAnalyzer = THDAnalyzer()
+                val analysis = thdAnalyzer.analyze(recording, testFrequency, sampleRate)
+
+                _state.value = _state.value.copy(
+                    isMeasuringTHD = false,
+                    thdProgress = 1f,
+                    thdResult = THDResult(
+                        thdPercent = analysis.thdPercent,
+                        thdPlusNPercent = analysis.thdNPercent,
+                        fundamentalHz = analysis.fundamentalHz,
+                        qualityRating = when {
+                            analysis.thdPercent < 1.0 -> "Excellent"
+                            analysis.thdPercent < 3.0 -> "Good"
+                            analysis.thdPercent < 5.0 -> "Fair"
+                            else -> "Poor"
+                        }
+                    )
+                )
+            } catch (e: Exception) {
+                Log.e(TAG, "THD measurement failed", e)
+                _state.value = _state.value.copy(
+                    isMeasuringTHD = false,
+                    error = "THD measurement failed: ${e.message}"
+                )
+            }
+        }
+    }
+
+    fun stopTHDMeasurement() {
+        _state.value = _state.value.copy(isMeasuringTHD = false)
     }
 
     override fun onCleared() {

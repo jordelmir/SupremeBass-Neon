@@ -135,6 +135,171 @@ fun DeviceLabScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
+        // Acoustic Measurements Section
+        NeonCard(glowColor = Color(0xFFFF00FF)) {
+            NeonSectionHeader(text = "ACOUSTIC MEASUREMENTS")
+            Spacer(modifier = Modifier.height(12.dp))
+
+            // RT60 Measurement
+            Text(
+                text = "RT60 (Reverberation Time)",
+                style = TextStyle(fontSize = 12.sp, color = Color(0xFFFF00FF), fontWeight = FontWeight.Bold)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Measures how long sound takes to decay by 60 dB",
+                style = TextStyle(fontSize = 10.sp, color = Color.Gray)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (state.isMeasuringRT60) {
+                Column {
+                    LinearProgressIndicator(
+                        progress = state.rt60Progress,
+                        modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                        color = Color(0xFFFF00FF),
+                        trackColor = TitanColors.CarbonGray
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = viewModel::stopRT60Measurement,
+                        colors = ButtonDefaults.buttonColors(containerColor = TitanColors.NeonOrange),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("STOP", fontSize = 10.sp)
+                    }
+                }
+            } else {
+                Button(
+                    onClick = viewModel::startRT60Measurement,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF00FF)),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("START RT60", fontSize = 10.sp, color = Color.White)
+                }
+            }
+
+            state.rt60Result?.let { result ->
+                Spacer(modifier = Modifier.height(8.dp))
+                NeonCard(glowColor = Color(0xFFFF00FF).copy(alpha = 0.5f)) {
+                    SharedDetailRow("RT60", "${String.format("%.2f", result.rt60Seconds)} seconds")
+                    SharedDetailRow("EDT", "${String.format("%.2f", result.edtSeconds)} seconds")
+                    SharedDetailRow("Room Type", result.roomQuality)
+                    SharedDetailRow("Confidence", "${String.format("%.0f", result.confidence * 100)}%")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // SPL Measurement
+            Text(
+                text = "SPL (Sound Pressure Level)",
+                style = TextStyle(fontSize = 12.sp, color = Color(0xFFFF00FF), fontWeight = FontWeight.Bold)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Measures loudness relative to digital full scale",
+                style = TextStyle(fontSize = 10.sp, color = Color.Gray)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (state.isMeasuringSPL) {
+                Column {
+                    LinearProgressIndicator(
+                        progress = state.splProgress,
+                        modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                        color = Color(0xFFFF00FF),
+                        trackColor = TitanColors.CarbonGray
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = viewModel::stopSPLMeasurement,
+                        colors = ButtonDefaults.buttonColors(containerColor = TitanColors.NeonOrange),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("STOP", fontSize = 10.sp)
+                    }
+                }
+            } else {
+                Button(
+                    onClick = viewModel::startSPLMeasurement,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF00FF)),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("START SPL", fontSize = 10.sp, color = Color.White)
+                }
+            }
+
+            state.splResult?.let { result ->
+                Spacer(modifier = Modifier.height(8.dp))
+                NeonCard(glowColor = Color(0xFFFF00FF).copy(alpha = 0.5f)) {
+                    SharedDetailRow("Peak dBFS", "${String.format("%.1f", result.peakDbFS)} dB")
+                    SharedDetailRow("RMS dBFS", "${String.format("%.1f", result.rmsDbFS)} dB")
+                    SharedDetailRow("Integrated", "${String.format("%.1f", result.integratedLoudness)} LUFS")
+                    SharedDetailRow("Dynamic Range", "${String.format("%.1f", result.dynamicRange)} dB")
+                }
+            }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // THD Measurement
+            Text(
+                text = "THD (Total Harmonic Distortion)",
+                style = TextStyle(fontSize = 12.sp, color = Color(0xFFFF00FF), fontWeight = FontWeight.Bold)
+            )
+            Spacer(modifier = Modifier.height(4.dp))
+            Text(
+                text = "Measures harmonic distortion in the signal",
+                style = TextStyle(fontSize = 10.sp, color = Color.Gray)
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+
+            if (state.isMeasuringTHD) {
+                Column {
+                    LinearProgressIndicator(
+                        progress = state.thdProgress,
+                        modifier = Modifier.fillMaxWidth().height(6.dp).clip(RoundedCornerShape(3.dp)),
+                        color = Color(0xFFFF00FF),
+                        trackColor = TitanColors.CarbonGray
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Button(
+                        onClick = viewModel::stopTHDMeasurement,
+                        colors = ButtonDefaults.buttonColors(containerColor = TitanColors.NeonOrange),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Text("STOP", fontSize = 10.sp)
+                    }
+                }
+            } else {
+                Button(
+                    onClick = viewModel::startTHDMeasurement,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF00FF)),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White)
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("START THD", fontSize = 10.sp, color = Color.White)
+                }
+            }
+
+            state.thdResult?.let { result ->
+                Spacer(modifier = Modifier.height(8.dp))
+                NeonCard(glowColor = Color(0xFFFF00FF).copy(alpha = 0.5f)) {
+                    SharedDetailRow("THD", "${String.format("%.3f", result.thdPercent)}%")
+                    SharedDetailRow("THD+N", "${String.format("%.3f", result.thdPlusNPercent)}%")
+                    SharedDetailRow("Fundamental", "${String.format("%.1f", result.fundamentalHz)} Hz")
+                    SharedDetailRow("Quality", result.qualityRating)
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
         // Saved profiles
         NeonCard(glowColor = TitanColors.NeonCyan) {
                 Row(
