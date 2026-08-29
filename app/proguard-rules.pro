@@ -27,6 +27,10 @@
 # ─── Signal Engine Domain Models ───
 -keep class com.supremecorp.bass.domain.model.** { *; }
 
+# ─── DSP Components (keep for reflection/runtime) ───
+-keep class com.supremecorp.bass.dsp.** { *; }
+-keep class com.supremecorp.bass.audio.input.** { *; }
+
 # ─── Enums ───
 -keepclassmembers enum * {
     public static **[] values();
@@ -48,3 +52,33 @@
     java.lang.Object writeReplace();
     java.lang.Object readResolve();
 }
+
+# ─── CameraX ───
+-keep class androidx.camera.** { *; }
+-dontwarn androidx.camera.**
+
+# ─── Lifecycle ───
+-keep class androidx.lifecycle.** { *; }
+-dontwarn androidx.lifecycle.**
+
+# ─── Coroutines ───
+-keep class kotlinx.coroutines.** { *; }
+-dontwarn kotlinx.coroutines.**
+
+# ─── App classes ───
+-keep class com.supremecorp.bass.MainActivity { *; }
+-keep class com.supremecorp.bass.AudioService { *; }
+
+# ─── Remove logging in release ───
+-assumenosideeffects class android.util.Log {
+    public static int v(...);
+    public static int d(...);
+    public static int i(...);
+    public static int w(...);
+    public static int e(...);
+}
+
+# ─── Optimization flags ───
+-optimizationpasses 5
+-allowaccessmodification
+-repackageclasses ''
