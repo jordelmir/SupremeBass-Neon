@@ -81,7 +81,7 @@ class ExperimentLabViewModel(application: Application) : AndroidViewModel(applic
             name = name,
             type = ExperimentType.FREQUENCY_RESPONSE,
             variables = listOf(
-                ExperimentVariable("frequency", "Hz", startHz, endHz, (endHz - startHz) / steps, startHz)
+                ExperimentVariable("frequency", VariableType.FREQUENCY, "Hz", startHz, endHz, (endHz - startHz) / steps, startHz)
             ),
             signalConfig = SignalConfig(frequencyHz = startHz, amplitude = 0.5f, waveform = Waveform.SINE),
             stepCount = steps,
@@ -103,7 +103,7 @@ class ExperimentLabViewModel(application: Application) : AndroidViewModel(applic
             name = name,
             type = ExperimentType.DISTORTION_PROFILE,
             variables = listOf(
-                ExperimentVariable("amplitude", "x", 0.1, 1.0, 0.1, 0.1)
+                ExperimentVariable("amplitude", VariableType.AMPLITUDE, "x", 0.1, 1.0, 0.1, 0.1)
             ),
             signalConfig = SignalConfig(frequencyHz = 1000.0, amplitude = 0.1f, waveform = Waveform.SINE),
             stepCount = 10,

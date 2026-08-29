@@ -12,6 +12,16 @@ enum class ExperimentType {
     CUSTOM
 }
 
+enum class VariableType {
+    FREQUENCY,
+    AMPLITUDE,
+    WAVEFORM,
+    DURATION,
+    NOISE_BANDWIDTH,
+    HARMONIC_COUNT,
+    CUSTOM
+}
+
 enum class ExperimentStatus {
     CONFIGURED,
     RUNNING,
@@ -23,6 +33,7 @@ enum class ExperimentStatus {
 
 data class ExperimentVariable(
     val name: String,
+    val type: VariableType = VariableType.FREQUENCY,
     val unit: String,
     val min: Double,
     val max: Double,

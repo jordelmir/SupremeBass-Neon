@@ -79,6 +79,11 @@ class SignalEngine(
             return false
         }
 
+        // Connect the routed device supplier for accurate route detection
+        if (backend is AndroidAudioTrackBackend) {
+            routeMonitor.setRoutedDeviceSupplier { backend.getRoutedDevice() }
+        }
+
         val session = SignalSession(
             id = UUID.randomUUID().toString(),
             config = finalConfig,

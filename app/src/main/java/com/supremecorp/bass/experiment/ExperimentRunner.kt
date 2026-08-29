@@ -89,18 +89,19 @@ class ExperimentRunner(
         val exp = _currentExperiment.value ?: return
         val startStep = exp.currentStep
         val allObservations = exp.observations.toMutableList()
+        val variable = exp.variables.first()
 
-        Log.i(TAG, "Loop started: ${exp.name} | startStep=$startStep | totalSteps=${exp.stepCount}")
+        Log.i(TAG, "Loop started: ${exp.name} | startStep=$startStep | totalSteps=${exp.stepCount} | variable=${variable.name}")
 
         for (step in startStep until exp.stepCount) {
             if (runnerJob?.isActive != true) return
 
-            val variable = exp.variables.first()
-            val freq = variable.min + (variable.max - variable.min) * step / (exp.stepCount - 1).coerceAtLeast(1)
+            // Calculate the variable value for this step (linear interpolation from min to max)
+            val variableValue = variable.min + (variable.max - variable.min) * step / (exp.stepCount - 1).coerceAtLeast(1)
 
-            Log.d(TAG, "Step ${step + 1}/${exp.stepCount}: freq=${String.format("%.1f", freq)}Hz")
+            Log.d(TAG, "Step ${step + 1}/${exp.stepCount}: ${variable.name}=${String.format("%.2f", variableValue)}${variable.unit}")
 
-            val stepObs = runStep(exp, freq, exp.repeatsPerStep)
+            val stepObs = runStep(exp, variableValue, exp.repeatsPerStep)
             allObservations.addAll(stepObs)
 
             _currentExperiment.value = _currentExperiment.value?.withStep(step + 1, stepObs)
@@ -115,24 +116,36 @@ class ExperimentRunner(
 
     private suspend fun runStep(
         experiment: AcousticExperiment,
-        frequencyHz: Double,
+        variableValue: Double,
         repeats: Int
     ): List<ExperimentObservation> {
         val obs = mutableListOf<ExperimentObservation>()
+        val variable = experiment.variables.first()
 
         for (r in 0 until repeats) {
             if (runnerJob?.isActive != true) return obs
 
-            val config = experiment.signalConfig.copy(frequencyHz = frequencyHz)
+            // Build signal config based on variable type
+            val config = when (variable.type) {
+                VariableType.FREQUENCY -> experiment.signalConfig.copy(frequencyHz = variableValue)
+                VariableType.AMPLITUDE -> experiment.signalConfig.copy(amplitude = variableValue.toFloat())
+                VariableType.DURATION -> experiment.signalConfig.copy(durationMs = variableValue.toLong())
+                VariableType.NOISE_BANDWIDTH -> experiment.signalConfig.copy(
+                    noiseLowHz = variableValue,
+                    noiseHighHz = variableValue + (experiment.signalConfig.noiseHighHz ?: 1000.0) - (experiment.signalConfig.noiseLowHz ?: 20.0)
+                )
+                else -> experiment.signalConfig.copy(frequencyHz = variableValue)
+            }
+
             val started = signalEngine.start(config)
 
             if (!started) {
-                Log.e(TAG, "Failed to start signal at ${frequencyHz}Hz, repeat $r")
+                Log.e(TAG, "Failed to start signal at ${variable.name}=${variableValue}${variable.unit}, repeat $r")
                 obs.add(
                     ExperimentObservation(
-                        frequencyHz = frequencyHz,
-                        variable = experiment.variables.first().name,
-                        requestedValue = frequencyHz,
+                        frequencyHz = config.frequencyHz,
+                        variable = variable.name,
+                        requestedValue = variableValue,
                         measuredPeak = 0.0,
                         measuredRms = 0.0,
                         authority = MeasurementAuthority.DIGITAL
@@ -150,16 +163,16 @@ class ExperimentRunner(
 
             obs.add(
                 ExperimentObservation(
-                    frequencyHz = frequencyHz,
-                    variable = experiment.variables.first().name,
-                    requestedValue = frequencyHz,
+                    frequencyHz = config.frequencyHz,
+                    variable = variable.name,
+                    requestedValue = variableValue,
                     measuredPeak = telemetry?.peak?.toDouble() ?: 0.0,
                     measuredRms = telemetry?.rms?.toDouble() ?: 0.0,
                     authority = MeasurementAuthority.DIGITAL
                 )
             )
 
-            Log.d(TAG, "Obs: freq=${frequencyHz}Hz peak=${telemetry?.peak} rms=${telemetry?.rms}")
+            Log.d(TAG, "Obs: ${variable.name}=${variableValue}${variable.unit} peak=${telemetry?.peak} rms=${telemetry?.rms}")
         }
         return obs
     }

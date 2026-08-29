@@ -24,6 +24,12 @@ class LegacyEffectsEngine(private val context: Context) {
 
     private companion object {
         const val TAG = "SupremeBass_Engine"
+
+        // Gain mapping: UI slider 0..300 → dB 0..12 → mB 0..1200
+        // LoudnessEnhancer.setTargetGain() takes millibels (mB), where 100 mB = 1 dB
+        const val MAX_GAIN_DB = 12f
+        const val MAX_SLIDER_VALUE = 300
+        const val MB_PER_DB = 100
     }
 
     private var loudnessEnhancer: LoudnessEnhancer? = null
@@ -34,6 +40,17 @@ class LegacyEffectsEngine(private val context: Context) {
     @Volatile private var isRunning = false
     private var recreateCount = 0
     private var lastRecreateMs = 0L
+
+    /** Convert UI gain (0..300) to millibels for LoudnessEnhancer */
+    private fun gainToMillibel(gainValue: Int): Int {
+        val db = (gainValue.toFloat() / MAX_SLIDER_VALUE) * MAX_GAIN_DB
+        return (db * MB_PER_DB).toInt().coerceIn(0, (MAX_GAIN_DB * MB_PER_DB).toInt())
+    }
+
+    /** Convert UI gain (0..300) to display dB */
+    fun gainToDb(gainValue: Int): Float {
+        return (gainValue.toFloat() / MAX_SLIDER_VALUE) * MAX_GAIN_DB
+    }
 
     private val audioManager = context.getSystemService(Context.AUDIO_SERVICE) as AudioManager
     private val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
@@ -186,9 +203,9 @@ class LegacyEffectsEngine(private val context: Context) {
             loudnessEnhancer = LoudnessEnhancer(SESSION_ID).apply {
                 enabled = true
                 if (currentGain > 0) {
-                    val targetGain = currentGain * 60
+                    val targetGain = gainToMillibel(currentGain)
                     setTargetGain(targetGain)
-                    Log.d(TAG, "LoudnessEnhancer: gain=$currentGain target=$targetGain")
+                    Log.d(TAG, "LoudnessEnhancer: gain=$currentGain target=${targetGain}mB (${gainToDb(currentGain)}dB)")
                 }
             }
         } catch (e: Exception) {
@@ -255,9 +272,9 @@ class LegacyEffectsEngine(private val context: Context) {
         if (enhancerOk && currentGain > 0) {
             try {
                 val current = loudnessEnhancer?.targetGain ?: 0
-                val expected = currentGain * 60
+                val expected = gainToMillibel(currentGain)
                 if (current != expected) {
-                    Log.w(TAG, "Gain drifted: expected=$expected actual=$current — re-applying")
+                    Log.w(TAG, "Gain drifted: expected=${expected}mB actual=${current}mB — re-applying")
                     applyGain()
                 }
             } catch (_: Exception) {}
@@ -312,7 +329,7 @@ class LegacyEffectsEngine(private val context: Context) {
     }
 
     private fun applyGain() {
-        val boostedGain = currentGain * 60
+        val boostedGain = gainToMillibel(currentGain)
 
         try {
             loudnessEnhancer?.setTargetGain(boostedGain)

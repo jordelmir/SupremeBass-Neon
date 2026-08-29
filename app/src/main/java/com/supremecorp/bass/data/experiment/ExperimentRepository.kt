@@ -165,6 +165,7 @@ private fun serializeVariables(variables: List<ExperimentVariable>): String {
     variables.forEach { v ->
         val json = JSONObject()
         json.put("name", v.name)
+        json.put("type", v.type.name)
         json.put("unit", v.unit)
         json.put("min", v.min)
         json.put("max", v.max)
@@ -180,8 +181,11 @@ private fun parseVariables(json: String): List<ExperimentVariable> {
         val arr = JSONArray(json)
         (0 until arr.length()).map { i ->
             val obj = arr.getJSONObject(i)
+            val typeName = if (obj.has("type")) obj.getString("type") else "FREQUENCY"
+            val type = try { VariableType.valueOf(typeName) } catch (_: Exception) { VariableType.FREQUENCY }
             ExperimentVariable(
                 name = obj.getString("name"),
+                type = type,
                 unit = obj.getString("unit"),
                 min = obj.getDouble("min"),
                 max = obj.getDouble("max"),
