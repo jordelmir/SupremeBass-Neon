@@ -14,6 +14,7 @@ class AcousticSafetyController {
     private var cooldownMs: Long = 5_000
     private var sessionStartTime: Long = 0
     private var lastStopTime: Long = 0
+    var routeInterlockEnabled: Boolean = true
 
     fun setRoute(route: OutputRoute) {
         currentRoute = route
@@ -34,8 +35,9 @@ class AcousticSafetyController {
     }
 
     fun validateConfig(config: SignalConfig): SafetyCheckResult {
-        if (currentRoute == OutputRoute.WIRED_HEADPHONES ||
-            currentRoute == OutputRoute.BLUETOOTH) {
+        if (routeInterlockEnabled &&
+            (currentRoute == OutputRoute.WIRED_HEADPHONES ||
+            currentRoute == OutputRoute.BLUETOOTH)) {
             return SafetyCheckResult.Blocked("Headphone/Bluetooth route blocked for high-output mode")
         }
 

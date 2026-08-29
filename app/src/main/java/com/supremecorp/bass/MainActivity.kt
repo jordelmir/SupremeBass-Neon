@@ -79,7 +79,8 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         Log.i(TAG, "onCreate: SDK=${Build.VERSION.SDK_INT} | ${Build.MANUFACTURER} ${Build.MODEL}")
 
-        AdsManager.initialize(this)
+        // TODO: Re-enable AdsManager when ads are needed
+        // AdsManager.initialize(this)
 
         // Request POST_NOTIFICATIONS on Android 13+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -455,10 +456,10 @@ fun SupremeBassScreen() {
                         onClick = {
                             gainValue = presetGain
                             presetChangeCount++
-                            // Show interstitial every 3 preset changes
-                            if (presetChangeCount % 3 == 0 && activity != null) {
-                                AdsManager.showInterstitialIfReady(activity)
-                            }
+                            // TODO: Re-enable interstitial ad when ads are needed
+                            // if (presetChangeCount % 3 == 0 && activity != null) {
+                            //     AdsManager.showInterstitialIfReady(activity)
+                            // }
                         }
                     )
                 }
@@ -560,16 +561,16 @@ fun SupremeBassScreen() {
             Spacer(modifier = Modifier.height(16.dp))
             }
 
-            // ═══════ BANNER AD — Fixed at bottom ═══════
-            AndroidView(
-                factory = { ctx ->
-                    AdsManager.createBannerAd(ctx)
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .background(Color.Black)
-            )
+            // TODO: Re-enable banner ad when ads are needed
+            // AndroidView(
+            //     factory = { ctx ->
+            //         AdsManager.createBannerAd(ctx)
+            //     },
+            //     modifier = Modifier
+            //         .fillMaxWidth()
+            //         .height(50.dp)
+            //         .background(Color.Black)
+            // )
         }
     }
 }

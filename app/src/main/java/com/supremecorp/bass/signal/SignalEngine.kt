@@ -16,6 +16,7 @@ import com.supremecorp.bass.domain.model.*
 import com.supremecorp.bass.dsp.Limiter
 import com.supremecorp.bass.dsp.Oscillator
 import com.supremecorp.bass.dsp.SignalGenerator
+import com.supremecorp.bass.ui.settings.AudioSettingsPrefs
 import java.util.UUID
 import java.util.concurrent.atomic.AtomicReference
 
@@ -69,6 +70,7 @@ class SignalEngine(
         generator.reset()
         limiter.reset()
         safetyController.setRoute(routeMonitor.getCurrentRoute())
+        safetyController.routeInterlockEnabled = AudioSettingsPrefs.routeInterlock(context)
 
         val backendResult = backend.start(audioConfig)
         if (backendResult is AudioBackendResult.Failure) {

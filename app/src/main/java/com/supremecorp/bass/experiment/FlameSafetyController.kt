@@ -9,7 +9,8 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 class FlameSafetyController(
-    private val audioManager: AudioManager
+    private val audioManager: AudioManager,
+    private val routeInterlockEnabled: Boolean = true
 ) {
     private val _safetyState = MutableStateFlow(FlameSafetyState())
     val safetyState: StateFlow<FlameSafetyState> = _safetyState.asStateFlow()
@@ -29,7 +30,7 @@ class FlameSafetyController(
         val violations = mutableListOf<FlameSafetyViolation>()
         val state = _safetyState.value
 
-        if (isHeadphoneConnected()) {
+        if (routeInterlockEnabled && isHeadphoneConnected()) {
             violations.add(FlameSafetyViolation.HEADPHONES_DETECTED)
             Log.w(TAG, "Safety violation: headphones detected")
         }

@@ -12,6 +12,7 @@ import com.supremecorp.bass.domain.model.*
 import com.supremecorp.bass.experiment.ExperimentRunner
 import com.supremecorp.bass.experiment.FlameSafetyController
 import com.supremecorp.bass.signal.SignalEngine
+import com.supremecorp.bass.ui.settings.AudioSettingsPrefs
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 
@@ -32,7 +33,10 @@ class ExperimentLabViewModel(application: Application) : AndroidViewModel(applic
     private val signalEngine = SignalEngine(application)
     private val runner = ExperimentRunner(signalEngine)
     private val audioManager = application.getSystemService(AudioManager::class.java)
-    private val flameSafetyController = FlameSafetyController(audioManager)
+    private val flameSafetyController = FlameSafetyController(
+        audioManager,
+        routeInterlockEnabled = AudioSettingsPrefs.routeInterlock(application)
+    )
 
     private val experimentDao: ExperimentDao by lazy {
         ExperimentDatabase.getInstance(application).experimentDao()

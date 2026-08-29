@@ -81,10 +81,14 @@ class AudioService : Service() {
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        Log.i(TAG, "onTaskRemoved — keeping alive (gain=$currentGain)")
+        Log.i(TAG, "onTaskRemoved — stopping service (user closed app)")
 
-        // DON'T kill the engine! Keep boost active.
-        // Only stop if user explicitly disables in app.
+        AudioStatePersistence.saveEnabled(this, false)
+        audioEngine?.stopSession()
+        audioEngine = null
+        releaseWakeLock()
+        stopForeground(STOP_FOREGROUND_REMOVE)
+        stopSelf()
 
         super.onTaskRemoved(rootIntent)
     }
