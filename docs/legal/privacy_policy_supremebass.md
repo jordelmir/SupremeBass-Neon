@@ -142,4 +142,4 @@ This Privacy Policy shall be governed by and construed in accordance with applic
 
 ---
 
-*This Privacy Policy is effective as of July 4, 2026.*
+*This Privacy Policy is effective as of August 29, 2026.*

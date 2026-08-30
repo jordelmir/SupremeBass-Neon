@@ -59,7 +59,9 @@ import com.supremecorp.bass.ui.device.DeviceLabScreen
 import com.supremecorp.bass.ui.experiment.ExperimentLabScreen
 import com.supremecorp.bass.ui.experiment.FlameLabScreen
 import com.supremecorp.bass.ui.navigation.SupremeAcousticsNavHost
+import com.supremecorp.bass.ui.neural.NeuralLabScreen
 import com.supremecorp.bass.ui.signal.SignalLabScreen
+import com.supremecorp.bass.ui.cv.VisualLabScreen
 import com.supremecorp.bass.ui.settings.SettingsScreen
 import com.supremecorp.bass.ui.theme.*
 
@@ -112,6 +114,8 @@ class MainActivity : ComponentActivity() {
                     deviceLabContent = { DeviceLabScreen() },
                     experimentLabContent = { ExperimentLabScreen() },
                     flameLabContent = { FlameLabScreen() },
+                    visualLabContent = { VisualLabScreen() },
+                    neuralLabContent = { NeuralLabScreen() },
                     settingsContent = { SettingsScreen() }
                 )
             }

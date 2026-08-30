@@ -40,11 +40,9 @@ android {
         create("release") {
             storeFile = file("release-key.jks")
             val pw = System.getenv("SUPREME_KEYSTORE_PASSWORD")
-            if (pw != null) {
-                storePassword = pw
-                keyAlias = System.getenv("SUPREME_KEY_ALIAS") ?: "supremebass"
-                keyPassword = System.getenv("SUPREME_KEY_PASSWORD") ?: pw
-            }
+            storePassword = pw ?: ""
+            keyAlias = System.getenv("SUPREME_KEY_ALIAS") ?: "supremebass"
+            keyPassword = System.getenv("SUPREME_KEY_PASSWORD") ?: pw ?: ""
         }
     }
 

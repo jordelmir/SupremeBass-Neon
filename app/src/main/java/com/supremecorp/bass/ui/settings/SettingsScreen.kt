@@ -1,12 +1,16 @@
 package com.supremecorp.bass.ui.settings
 
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -20,6 +24,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.supremecorp.bass.BuildConfig
 import com.supremecorp.bass.dsp.eq.EqualizerPreset
 import com.supremecorp.bass.ui.components.NeonScreenTitle
 import com.supremecorp.bass.ui.components.NeonCard
@@ -127,12 +132,75 @@ fun SettingsScreen() {
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // About
-        SettingsSection("ABOUT") {
-            SettingsInfo("Version", "2.0.0-alpha")
-            SettingsInfo("Build", "Signal Engine V1 + Oboe C++")
-            SettingsInfo("Architecture", "Supreme Acoustics")
-            SettingsInfo("Native DSP", "C++17 (Oboe 1.8.0)")
+        // Legal & About
+        SettingsSection("LEGAL & ABOUT") {
+            SettingsInfo("Version", BuildConfig.VERSION_NAME)
+            SettingsInfo("Build", "${BuildConfig.VERSION_CODE}")
+            SettingsInfo("Architecture", "Clean Architecture + DSP")
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Privacy Policy
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://supremebass.app/privacy"))
+                        context.startActivity(intent)
+                    }
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.PrivacyTip,
+                    contentDescription = null,
+                    tint = TitanColors.NeonCyan,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Privacy Policy", style = TextStyle(fontSize = 13.sp, color = Color.White))
+                    Text("supremebass.app/privacy", style = TextStyle(fontSize = 10.sp, color = Color.Gray))
+                }
+                Icon(
+                    Icons.Default.OpenInNew,
+                    contentDescription = null,
+                    tint = Color.Gray,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            // Open Source Licenses
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://supremebass.app/licenses"))
+                        context.startActivity(intent)
+                    }
+                    .padding(vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    Icons.Default.Code,
+                    contentDescription = null,
+                    tint = TitanColors.NeonCyan,
+                    modifier = Modifier.size(20.dp)
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column(modifier = Modifier.weight(1f)) {
+                    Text("Open Source Licenses", style = TextStyle(fontSize = 13.sp, color = Color.White))
+                    Text("Oboe, Room, CameraX, AdMob", style = TextStyle(fontSize = 10.sp, color = Color.Gray))
+                }
+                Icon(
+                    Icons.Default.OpenInNew,
+                    contentDescription = null,
+                    tint = Color.Gray,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(24.dp))

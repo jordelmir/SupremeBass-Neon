@@ -29,14 +29,14 @@ enum class Screen(val label: String, val icon: ImageVector, val isLab: Boolean =
     DEVICE_LAB("Device Lab", Icons.Default.Memory, isLab = true),
     EXPERIMENT_LAB("Experiments", Icons.Default.Science, isLab = true),
     FLAME_LAB("Flame Lab", Icons.Default.LocalFireDepartment, isLab = true),
+    VISUAL_LAB("Visual Lab", Icons.Default.Visibility, isLab = true),
+    NEURAL_LAB("Neural Lab", Icons.Default.Psychology, isLab = true),
     SETTINGS("Settings", Icons.Default.Settings)
 }
 
-/** Get visible screens based on build config */
+/** Get visible screens - all screens visible in all builds */
 fun getVisibleScreens(): List<Screen> {
-    return Screen.entries.filter { screen ->
-        !screen.isLab || BuildConfig.DEBUG
-    }
+    return Screen.entries.toList()
 }
 
 @Composable
@@ -46,6 +46,8 @@ fun SupremeAcousticsNavHost(
     deviceLabContent: @Composable () -> Unit,
     experimentLabContent: @Composable () -> Unit,
     flameLabContent: @Composable () -> Unit,
+    visualLabContent: @Composable () -> Unit,
+    neuralLabContent: @Composable () -> Unit,
     settingsContent: @Composable () -> Unit
 ) {
     var currentScreen by remember { mutableStateOf(Screen.ENHANCE) }
@@ -58,6 +60,8 @@ fun SupremeAcousticsNavHost(
                 Screen.DEVICE_LAB -> deviceLabContent()
                 Screen.EXPERIMENT_LAB -> experimentLabContent()
                 Screen.FLAME_LAB -> flameLabContent()
+                Screen.VISUAL_LAB -> visualLabContent()
+                Screen.NEURAL_LAB -> neuralLabContent()
                 Screen.SETTINGS -> settingsContent()
             }
         }
@@ -84,22 +88,22 @@ fun SupremeAcousticsNavHost(
                             interactionSource = remember { MutableInteractionSource() },
                             indication = null
                         ) { currentScreen = screen }
-                        .padding(horizontal = 16.dp, vertical = 4.dp)
+                        .padding(horizontal = 12.dp, vertical = 4.dp)
                 ) {
                     Icon(
                         screen.icon,
                         contentDescription = screen.label,
                         tint = color,
-                        modifier = Modifier.size(24.dp)
+                        modifier = Modifier.size(20.dp)
                     )
                     Spacer(modifier = Modifier.height(2.dp))
                     Text(
                         text = screen.label,
                         style = TextStyle(
-                            fontSize = 9.sp,
+                            fontSize = 8.sp,
                             fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
                             color = color,
-                            letterSpacing = 1.sp
+                            letterSpacing = 0.5.sp
                         )
                     )
                 }
