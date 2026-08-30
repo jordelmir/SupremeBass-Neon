@@ -1,49 +1,87 @@
-# Supreme Acoustics
+# SupremeBass
 
-**Android bass booster with signal generator and safety features.**
+**Professional Android audio enhancement platform with real DSP processing, acoustic measurements, and speaker diagnostics.**
 
 [![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 [![API](https://img.shields.io/badge/API-26%2B-brightgreen.svg)](https://developer.android.com/about/versions/oreo)
+[![Build](https://img.shields.io/badge/Build-Passing-brightgreen.svg)]()
 
 ---
 
 ## Download
 
-**[Download Latest APK](https://github.com/jordelmir/SupremeBass-Neon/releases/latest)**
+**[Download Latest APK](https://github.com/jordelmmir/SupremeBass-Neon/releases/latest)**
 
 > Requires Android 8.0 (API 26) or higher.
 
 ---
 
-## What It Does
+## Features
 
-### Bass Booster
-- Gain slider from 100% to 400% (0-30 dB boost)
-- 11 presets (Flat, Warm Bass, Deep Sub, Punchy Mids, Vocal Clarity, etc.)
-- Boost persists across screen-off and app switches
+### 🎵 Enhance (Main Screen)
+- Bass boost with low shelf filter (0-12 dB)
+- 11 professional presets (Flat, Warm Bass, Deep Sub, etc.)
 - Real-time audio visualizer
 - Auto-shutoff after 30 minutes
+- Route interlock for safety
 
-### Signal Generator
-- Generate test tones: Sine, Square, Triangle, Sawtooth, Chirp, Noise Band
+### 📊 Signal Lab
+- **10-Band Parametric EQ** with ISO frequencies (31Hz-16kHz)
+- **Bass Boost** with configurable cutoff (50-300Hz)
+- **Stereo Virtualizer** with spatial enhancement
+- **Real-time Spectrum Analyzer** with microphone input
+- Signal generator: Sine, Square, Triangle, Sawtooth, Chirp, Noise Band
 - Frequency range: 20 Hz – 20 kHz
-- Configurable amplitude and duration
 - Automated frequency sweeps
 
-### Safety Features
-- Route interlock (blocks unsafe audio routes)
-- Amplitude limiting
-- Duration limits with auto-shutoff
-- First-run safety disclaimer
-- Gain drift detection
+### 🔬 Device Lab
+- **Frequency Response Characterization** (20Hz-20kHz, 30 steps)
+- **RT60 Measurement** (Reverberation Time)
+- **SPL Measurement** (Sound Pressure Level)
+- **THD Measurement** (Total Harmonic Distortion)
+- Saved profiles with history
+
+### 🧪 Experiment Lab
+- Acoustic experiments with configurable variables
+- Frequency response experiments
+- Distortion profiling
+- Detailed results with observations
+
+### 🔥 Flame Lab
+- Visual audio effects
+
+### 📷 Visual Lab
+- CameraX-based visual analysis
+
+### 🧠 Neural Lab
+- AI-powered audio analysis (coming soon)
+
+### ⚙️ Settings
+- Audio engine configuration (Oboe/Java backend)
+- Equalizer presets
+- Safety settings (route interlock, amplitude/duration limits)
+- Privacy Policy & Open Source Licenses
 
 ---
 
-## Screenshots
+## DSP Architecture
 
-| Main Screen | Signal Lab | Device Lab | Experiments | Flame Lab | Settings |
-|:-----------:|:----------:|:----------:|:-----------:|:---------:|:--------:|
-| ![Main](docs/screenshots/01_main.png) | ![Signal](docs/screenshots/02_signal.png) | ![Device](docs/screenshots/03_device.png) | ![Experiment](docs/screenshots/04_experiment.png) | ![Flame](docs/screenshots/05_flame.png) | ![Settings](docs/screenshots/06_settings.png) |
+```
+SignalGenerator → BiquadFilter → ParametricEQ → BassBoost → Virtualizer → Limiter → AudioTrack
+```
+
+### Components
+| Component | Description |
+|-----------|-------------|
+| `BiquadFilter` | All standard filter types (LPF, HPF, BPF, Notch, AllPass, Peaking, Shelving) |
+| `ParametricEQ` | 10-band EQ with 7 presets |
+| `BassBoost` | Low shelf filter (not global gain) |
+| `Virtualizer` | Mid-side processing for stereo width |
+| `FFT` | Radix-2 Cooley-Tukey for spectrum analysis |
+| `RT60Estimator` | Impulse response analysis |
+| `SPLEstimator` | RMS/peak/loudness estimation |
+| `THDAnalyzer` | Harmonic distortion measurement |
+| `SpeakerProtection` | Thermal/excursion monitoring |
 
 ---
 
@@ -53,12 +91,13 @@
 |-----------|-----------|
 | Language | Kotlin 1.9.20 |
 | UI | Jetpack Compose (BOM 2024.02.02) |
-| Architecture | Clean Architecture |
+| Architecture | Clean Architecture (domain/dsp/audio/experiment/cv) |
 | Database | Room 2.6.1 |
 | Native DSP | C++17 via Oboe 1.8.0 |
 | Build | Gradle 8.6, AGP 8.3.2 |
 | Min SDK | 26 (Android 8.0) |
 | Target SDK | 35 (Android 15) |
+| CI | GitHub Actions |
 
 ---
 
@@ -74,10 +113,63 @@
 ./gradlew assembleDebug
 ```
 
+### Release Build
+```bash
+# Set environment variables
+export SUPREME_KEYSTORE_PASSWORD="your_password"
+export SUPREME_KEY_ALIAS="supremebass"
+export SUPREME_KEY_PASSWORD="your_password"
+
+./gradlew assembleRelease
+```
+
 ### Run Tests
 ```bash
 ./gradlew testDebugUnitTest
 ```
+
+---
+
+## Project Structure
+
+```
+app/src/main/java/com/supremecorp/bass/
+├── audio/              # Audio backends (AudioTrack, Oboe)
+│   ├── backend/        # AndroidAudioTrackBackend
+│   └── input/          # AudioInputProcessor (microphone)
+├── core/               # Logging, utilities
+├── cv/                 # Computer vision (Visual Lab)
+├── data/               # Database, repositories
+├── domain/             # Models, use cases
+├── dsp/                # Signal processing (EQ, FFT, etc.)
+├── experiment/         # Experiment runner
+├── infrastructure/     # Export, telemetry
+├── signal/             # Signal engine
+├── ui/                 # Compose UI
+│   ├── components/     # Shared composables
+│   ├── device/         # Device Lab
+│   ├── experiment/     # Experiment Lab + Flame Lab
+│   ├── neural/         # Neural Lab
+│   ├── settings/       # Settings
+│   ├── signal/         # Signal Lab
+│   └── cv/             # Visual Lab
+└── MainActivity.kt
+```
+
+---
+
+## Permissions
+
+| Permission | Purpose |
+|-----------|---------|
+| `MODIFY_AUDIO_SETTINGS` | Audio effects processing |
+| `FOREGROUND_SERVICE` | Persistent boost service |
+| `FOREGROUND_SERVICE_MEDIA_PLAYBACK` | Audio boost while backgrounded |
+| `POST_NOTIFICATIONS` | Boost status notification (Android 13+) |
+| `WAKE_LOCK` | Keep CPU active during boost |
+| `RECORD_AUDIO` | Acoustic measurements (RT60, SPL, THD) |
+| `CAMERA` | Visual Lab analysis |
+| `INTERNET` | Ads (disabled by default) |
 
 ---
 
@@ -93,19 +185,12 @@ adb logcat -s SupremeBass_*
 | `SupremeBass_MainActivity` | Activity lifecycle, permissions |
 | `SupremeBass_Service` | Foreground service state |
 | `SupremeBass_Engine` | Audio effects |
-| `SupremeBass_Persistence` | SharedPreferences state |
-
----
-
-## Permissions
-
-| Permission | Purpose |
-|-----------|---------|
-| `MODIFY_AUDIO_SETTINGS` | Audio effects processing |
-| `FOREGROUND_SERVICE` | Persistent boost service |
-| `FOREGROUND_SERVICE_MEDIA_PLAYBACK` | Audio boost while backgrounded |
-| `POST_NOTIFICATIONS` | Boost status notification (Android 13+) |
-| `WAKE_LOCK` | Keep CPU active during boost |
+| `SupremeBass_DeviceLab` | Device characterization |
+| `SupremeBass_ExperimentVM` | Experiment runner |
+| `AudioInputProcessor` | Microphone input |
+| `RT60Estimator` | Reverberation measurement |
+| `SPLEstimator` | Sound pressure measurement |
+| `THDAnalyzer` | Distortion measurement |
 
 ---
 
