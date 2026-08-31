@@ -18,23 +18,10 @@ import com.supreme.android.ui.network.NetworkScreen
 import com.supreme.android.ui.noise.NoiseScreen
 import com.supreme.android.ui.vibration.VibrationScreen
 import com.supreme.android.ui.warranty.WarrantyScreen
+import com.supreme.android.ui.homehub.HomeHubScreen
+import com.supreme.android.ui.camerahub.CameraHubScreen
+import com.supreme.android.ui.find.FindScreen
 
-/**
- * Supreme Navigation Graph
- *
- * Routes:
- * - home: Dashboard with all modules
- * - fix: Fix AI diagnosis
- * - tools: Tools hub (network, noise, vibration)
- * - tools/network: Network Doctor
- * - tools/noise: Noise Doctor
- * - tools/vibration: Vibration Doctor
- * - assets: Asset list
- * - assets/{id}: Asset detail
- * - maintenance: Maintenance schedule
- * - warranty: Warranty Vault
- * - settings: Settings
- */
 @Composable
 fun SupremeNavGraph(
     navController: NavHostController,
@@ -45,25 +32,23 @@ fun SupremeNavGraph(
         startDestination = "home",
         modifier = modifier
     ) {
-        // Home Dashboard
         composable("home") {
             HomeScreen(
                 onNavigateToFix = { navController.navigate("fix") },
                 onNavigateToTools = { navController.navigate("tools") },
                 onNavigateToAssets = { navController.navigate("assets") },
                 onNavigateToMaintenance = { navController.navigate("maintenance") },
-                onNavigateToWarranty = { navController.navigate("warranty") }
+                onNavigateToWarranty = { navController.navigate("warranty") },
+                onNavigateToHomeHub = { navController.navigate("homehub") },
+                onNavigateToCameraHub = { navController.navigate("camerahub") },
+                onNavigateToFind = { navController.navigate("find") }
             )
         }
 
-        // Fix AI
         composable("fix") {
-            FixScreen(
-                onBack = { navController.popBackStack() }
-            )
+            FixScreen(onBack = { navController.popBackStack() })
         }
 
-        // Tools Hub
         composable("tools") {
             ToolsHubScreen(
                 onNavigateToNetwork = { navController.navigate("tools/network") },
@@ -73,68 +58,55 @@ fun SupremeNavGraph(
             )
         }
 
-        // Network Doctor
         composable("tools/network") {
-            NetworkScreen(
-                onBack = { navController.popBackStack() }
-            )
+            NetworkScreen(onBack = { navController.popBackStack() })
         }
 
-        // Noise Doctor
         composable("tools/noise") {
-            NoiseScreen(
-                onBack = { navController.popBackStack() }
-            )
+            NoiseScreen(onBack = { navController.popBackStack() })
         }
 
-        // Vibration Doctor
         composable("tools/vibration") {
-            VibrationScreen(
-                onBack = { navController.popBackStack() }
-            )
+            VibrationScreen(onBack = { navController.popBackStack() })
         }
 
-        // Assets
         composable("assets") {
             AssetsScreen(
-                onNavigateToAsset = { assetId ->
-                    navController.navigate("assets/$assetId")
-                },
+                onNavigateToAsset = { assetId -> navController.navigate("assets/$assetId") },
                 onBack = { navController.popBackStack() }
             )
         }
 
-        // Asset Detail
         composable(
             "assets/{assetId}",
             arguments = listOf(navArgument("assetId") { type = NavType.StringType })
         ) { backStackEntry ->
             val assetId = backStackEntry.arguments?.getString("assetId") ?: ""
-            AssetDetailScreen(
-                assetId = assetId,
-                onBack = { navController.popBackStack() }
-            )
+            AssetDetailScreen(assetId = assetId, onBack = { navController.popBackStack() })
         }
 
-        // Maintenance
         composable("maintenance") {
-            MaintenanceScreen(
-                onBack = { navController.popBackStack() }
-            )
+            MaintenanceScreen(onBack = { navController.popBackStack() })
         }
 
-        // Warranty Vault
         composable("warranty") {
-            WarrantyScreen(
-                onBack = { navController.popBackStack() }
-            )
+            WarrantyScreen(onBack = { navController.popBackStack() })
         }
 
-        // Settings
+        composable("homehub") {
+            HomeHubScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("camerahub") {
+            CameraHubScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("find") {
+            FindScreen(onBack = { navController.popBackStack() })
+        }
+
         composable("settings") {
-            SettingsScreen(
-                onBack = { navController.popBackStack() }
-            )
+            SettingsScreen(onBack = { navController.popBackStack() })
         }
     }
 }

@@ -13,9 +13,6 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
-/**
- * Home Dashboard — the main screen showing all Supreme modules.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
@@ -23,14 +20,16 @@ fun HomeScreen(
     onNavigateToTools: () -> Unit,
     onNavigateToAssets: () -> Unit,
     onNavigateToMaintenance: () -> Unit,
-    onNavigateToWarranty: () -> Unit
+    onNavigateToWarranty: () -> Unit,
+    onNavigateToHomeHub: () -> Unit = {},
+    onNavigateToCameraHub: () -> Unit = {},
+    onNavigateToFind: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Header
         Text(
             text = "Supreme",
             style = MaterialTheme.typography.headlineLarge,
@@ -44,13 +43,11 @@ fun HomeScreen(
 
         Spacer(modifier = Modifier.height(24.dp))
 
-        // Module Grid
         LazyVerticalGrid(
             columns = GridCells.Fixed(2),
             verticalArrangement = Arrangement.spacedBy(12.dp),
             horizontalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Fix AI
             item {
                 ModuleCard(
                     title = "Fix AI",
@@ -60,7 +57,6 @@ fun HomeScreen(
                 )
             }
 
-            // Tools
             item {
                 ModuleCard(
                     title = "Tools",
@@ -70,7 +66,6 @@ fun HomeScreen(
                 )
             }
 
-            // Assets
             item {
                 ModuleCard(
                     title = "Assets",
@@ -80,7 +75,6 @@ fun HomeScreen(
                 )
             }
 
-            // Maintenance
             item {
                 ModuleCard(
                     title = "Maintenance",
@@ -90,7 +84,6 @@ fun HomeScreen(
                 )
             }
 
-            // Warranty Vault
             item {
                 ModuleCard(
                     title = "Warranty",
@@ -100,33 +93,30 @@ fun HomeScreen(
                 )
             }
 
-            // Home Hub (placeholder)
             item {
                 ModuleCard(
                     title = "Home",
                     subtitle = "Smart home control",
                     icon = Icons.Default.Home,
-                    onClick = { /* TODO: Navigate to Home Hub */ }
+                    onClick = onNavigateToHomeHub
                 )
             }
 
-            // Camera Hub (placeholder)
             item {
                 ModuleCard(
                     title = "Cameras",
                     subtitle = "Camera management",
                     icon = Icons.Default.Videocam,
-                    onClick = { /* TODO: Navigate to Camera Hub */ }
+                    onClick = onNavigateToCameraHub
                 )
             }
 
-            // Find (placeholder)
             item {
                 ModuleCard(
                     title = "Find",
                     subtitle = "Locate objects",
                     icon = Icons.Default.LocationSearching,
-                    onClick = { /* TODO: Navigate to Find */ }
+                    onClick = onNavigateToFind
                 )
             }
         }

@@ -9,29 +9,25 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.supreme.core.Diagnosis
-import com.supreme.core.Cause
-import com.supreme.core.CheckStatus
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.supreme.android.viewmodel.FixViewModel
 
-/**
- * Fix AI Screen — diagnose problems with camera + audio + vibration.
- */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FixScreen(
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    viewModel: FixViewModel = viewModel()
 ) {
-    var isRecording by remember { mutableStateOf(false) }
-    var diagnosis by remember { mutableStateOf<Diagnosis?>(null) }
+    val uiState by viewModel.uiState.collectAsState()
 
     Column(
         modifier = Modifier
             .fillMaxSize()
             .padding(16.dp)
     ) {
-        // Header
         Text(
             text = "Fix AI",
             style = MaterialTheme.typography.headlineMedium,
@@ -69,31 +65,62 @@ fun FixScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Record Button
+        // Analyze Button
         Button(
-            onClick = { isRecording = !isRecording },
+            onClick = { viewModel.analyze() },
             modifier = Modifier.fillMaxWidth(),
-            colors = if (isRecording) {
-                ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-            } else {
-                ButtonDefaults.buttonColors()
-            }
+            enabled = !uiState.isAnalyzing
         ) {
-            Icon(
-                if (isRecording) Icons.Default.Stop else Icons.Default.Mic,
-                contentDescription = null
-            )
+            if (uiState.isAnalyzing) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Icon(Icons.Default.Build, contentDescription = null)
+            }
             Spacer(modifier = Modifier.width(8.dp))
-            Text(if (isRecording) "Stop Recording" else "Start Recording")
+            Text(if (uiState.isAnalyzing) "Analyzing..." else "Diagnose Problem")
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Diagnosis Results
-        diagnosis?.let { diag ->
-            DiagnosisCard(diag)
-        } ?: run {
-            // Placeholder state
+        // Results
+        if (uiState.diagnosis.isNotEmpty()) {
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text(
+                        text = "Diagnosis",
+                        style = MaterialTheme.typography.titleLarge,
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(
+                        text = "Confidence: ${(uiState.confidence * 100).toInt()}%",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(
+                        text = uiState.diagnosis,
+                        style = MaterialTheme.typography.bodyMedium
+                    )
+                    if (uiState.suggestions.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Text(
+                            text = "Suggestions",
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                        uiState.suggestions.forEach { suggestion ->
+                            Text(
+                                text = "• $suggestion",
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        }
+                    }
+                }
+            }
+        } else {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
@@ -107,134 +134,10 @@ fun FixScreen(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        "Record audio/video to diagnose",
+                        "Tap to diagnose a problem",
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun DiagnosisCard(diagnosis: Diagnosis) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            Text(
-                text = "Diagnosis",
-                style = MaterialTheme.typography.titleLarge,
-                fontWeight = FontWeight.Bold
-            )
-            Text(
-                text = "Confidence: ${(diagnosis.confidence * 100).toInt()}%",
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = "Most Likely Causes",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-
-            diagnosis.mostLikelyCauses.forEach { cause ->
-                CauseItem(cause)
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = "Checks",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-
-            diagnosis.checks.forEach { check ->
-                CheckItem(check.name, check.status, check.detail)
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            Text(
-                text = "Next Tests",
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
-            )
-
-            diagnosis.nextTests.forEach { test ->
-                Text(
-                    text = "• $test",
-                    style = MaterialTheme.typography.bodyMedium
-                )
-            }
-        }
-    }
-}
-
-@Composable
-fun CauseItem(cause: Cause) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        LinearProgressIndicator(
-            progress = { cause.probability.toFloat() },
-            modifier = Modifier
-                .weight(1f)
-                .height(8.dp),
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = "${(cause.probability * 100).toInt()}%",
-            style = MaterialTheme.typography.bodySmall
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(
-            text = cause.name,
-            style = MaterialTheme.typography.bodyMedium,
-            fontWeight = FontWeight.Medium
-        )
-    }
-    Text(
-        text = cause.explanation,
-        style = MaterialTheme.typography.bodySmall,
-        color = MaterialTheme.colorScheme.onSurfaceVariant
-    )
-}
-
-@Composable
-fun CheckItem(name: String, status: CheckStatus, detail: String?) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 4.dp),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        Icon(
-            when (status) {
-                CheckStatus.PASSED -> Icons.Default.CheckCircle
-                CheckStatus.WARNING -> Icons.Default.Warning
-                CheckStatus.FAILED -> Icons.Default.Error
-                CheckStatus.UNKNOWN -> Icons.Default.Help
-            },
-            contentDescription = status.name,
-            tint = when (status) {
-                CheckStatus.PASSED -> MaterialTheme.colorScheme.primary
-                CheckStatus.WARNING -> MaterialTheme.colorScheme.error
-                CheckStatus.FAILED -> MaterialTheme.colorScheme.error
-                CheckStatus.UNKNOWN -> MaterialTheme.colorScheme.onSurfaceVariant
-            },
-            modifier = Modifier.size(20.dp)
-        )
-        Spacer(modifier = Modifier.width(8.dp))
-        Column {
-            Text(name, style = MaterialTheme.typography.bodyMedium)
-            detail?.let {
-                Text(it, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
             }
         }
     }
