@@ -2,90 +2,84 @@
 
 The intelligence layer for the physical things around you.
 
-## Vision
+## Your home. Your devices. Your vehicle. Your utilities. Your documents. Your cameras. Your maintenance. Your safety.
 
-Not a collection of tools, but a platform that:
-
-```
-OBSERVE → UNDERSTAND → DIAGNOSE → RECOMMEND → ACT → VERIFY → REMEMBER/PREDICT
-```
+---
 
 ## Architecture
 
 ```
 supreme/
 ├── core/
-│   ├── universal-model/    — The ontology (Asset, Device, Observation, Anomaly, etc.)
-│   └── device-abstraction/ — SupremeDevice interface (polymorphic device gateway)
+│   ├── universal-model/     — The ontology (Asset, Device, Observation, etc.)
+│   └── device-abstraction/  — SupremeDevice interface
 │
 ├── modules/
-│   ├── fix-ai/            — "What's wrong with this?" (camera + mic + vibration)
-│   ├── maintenance-os/    — "When should I maintain this?" (scheduling + reminders)
-│   ├── warranty-vault/    — "Does this still have warranty?" (OCR + document scanning)
-│   ├── home-hub/          — Matter/Google Home integration
-│   ├── network-doctor/    — Wi-Fi/Internet diagnosis
-│   ├── noise-doctor/      — Sound analysis and diagnostics
-│   ├── vibration-doctor/  — Vibration analysis
-│   ├── camera-hub/        — ONVIF/RTSP camera management
-│   ├── find/              — BLE/UWB object finding
-│   ├── utilities/         — Water/electric/gas metering
-│   ├── inventory/         — Home inventory management
-│   ├── vehicle-hub/       — OBD vehicle diagnostics
-│   ├── leak-watch/        — Water leak detection + auto shutoff
-│   └── emergency/         — Emergency tools + safety
+│   ├── fix-ai/             — "What's wrong with this?" (camera + mic + vibration)
+│   ├── maintenance-os/     — "When should I maintain this?" (scheduling)
+│   ├── warranty-vault/     — "Does this still have warranty?" (OCR)
+│   ├── network-doctor/     — "Why is my Internet bad?" (Wi-Fi analysis)
+│   ├── noise-doctor/       — "What is this sound?" (FFT + harmonics)
+│   ├── vibration-doctor/   — "Is this vibrating normally?" (accelerometer)
+│   ├── camera-hub/         — "Show me all my cameras" (ONVIF/RTSP)
+│   ├── find/               — "Where are my keys?" (BLE/UWB)
+│   ├── home-hub/           — "Control my home" (Matter/Google Home)
+│   ├── utilities/          — "Track my consumption" (water/electric/gas)
+│   ├── inventory/          — "What do I own?" (barcode/QR/NFC/OCR)
+│   ├── vehicle-hub/        — "How is my car?" (OBD2 diagnostics)
+│   ├── leak-watch/         — "Stop the leak" (sensors + valve)
+│   └── emergency/          — "I need help NOW" (flashlight/SOS/contacts)
 │
 ├── apps/
-│   └── android/           — Android app (Compose UI)
+│   └── android/            — Android app (Compose UI)
 │
-└── hardware/
-    ├── supreme-tag/       — BLE/UWB tracking tag
-    ├── supreme-sensor/    — Temperature/humidity/motion sensor
-    └── supreme-hub/       — Matter/BLE gateway
+└── supreme-guardian/       — B2B safety platform (separate)
+```
+
+## The Cycle
+
+```
+OBSERVE → UNDERSTAND → DIAGNOSE → RECOMMEND → ACT → VERIFY → REMEMBER/PREDICT
 ```
 
 ## The Universal Ontology
 
 Every module speaks this language:
 
-```kotlin
-ASSET       — anything the user owns
-DEVICE      — anything that produces observations
-OBSERVATION — a reading from a device or user input
-ANOMALY     — something abnormal detected
-ACTION      — something done or recommended
-EVIDENCE    — proof that something happened
-MAINTENANCE — a task scheduled or completed
-COST        — money spent or estimated
-DIAGNOSIS   — AI-powered cause analysis
-WARRANTY    — warranty information
-```
+| Entity | Purpose |
+|--------|---------|
+| ASSET | Anything the user owns |
+| DEVICE | Anything that produces observations |
+| OBSERVATION | A reading from a device or user input |
+| ANOMALY | Something abnormal detected |
+| ACTION | Something done or recommended |
+| EVIDENCE | Proof that something happened |
+| MAINTENANCE | A task scheduled or completed |
+| COST | Money spent or estimated |
+| DIAGNOSIS | AI-powered cause analysis |
+| WARRANTY | Warranty information |
 
 ## Example: Washing Machine Lifecycle
 
 ```
 ASSET: Washing Machine
-├── DEVICE: Noise sensor
-│   └── OBSERVATION: 31.4 Hz dominant, harmonics at 62.7, 94.1
-├── DEVICE: Vibration sensor
-│   └── OBSERVATION: 0.81 g RMS (+161% from baseline)
-├── DEVICE: Power monitor
-│   └── OBSERVATION: 450W draw (+20% from baseline)
+├── DEVICE: Noise sensor → OBSERVATION: 31.4 Hz, harmonics 62.7, 94.1
+├── DEVICE: Vibration sensor → OBSERVATION: 0.81 g RMS (+161%)
+├── DEVICE: Power monitor → OBSERVATION: 450W (+20%)
 │
-├── ANOMALY: Bearing wear (confidence: 78%)
+├── ANOMALY: Bearing wear (78% confidence)
 ├── DIAGNOSIS: Bearing wear → Inspect → Replace
 ├── ACTION: Replace bearing (₡18,000)
 ├── EVIDENCE: before.wav, after.wav, invoice.pdf
 ├── MAINTENANCE: Next in 6 months
-└── COST: ₡18,000 (₡42,000 total lifetime)
+└── COST: ₡18,000 (₡42,000 lifetime)
 ```
-
-Now Supreme **learns the physical life** of the user's things.
 
 ## Commercial Tiers
 
 ### Supreme Free
 - Phone-only tools
-- Signal analysis, vibration, network
+- Signal, noise, vibration, network analysis
 - Basic inventory, maintenance reminders
 - Goal: **millions of users**
 
@@ -95,6 +89,7 @@ Now Supreme **learns the physical life** of the user's things.
 - Warranty intelligence
 - Advanced measurement
 - Historical analytics
+- Cloud backup
 
 ### Supreme Home ($5–$15/month/home)
 - Matter integration
@@ -104,29 +99,41 @@ Now Supreme **learns the physical life** of the user's things.
 - Safety dashboard
 
 ### Supreme Hardware
-- Supreme Tag (BLE/UWB)
-- Supreme Sensor (temp/humidity/motion)
-- Supreme Hub (Matter/BLE gateway)
+- Supreme Tag (BLE/UWB) — $15-25
+- Supreme Sensor (temp/humidity/motion) — $20-30
+- Supreme Hub (Matter/BLE gateway) — $50-80
 
 ### Supreme Guardian (B2B)
 - Commercial/industrial safety
 - Installation + license
-
-## Priority Order
-
-1. **Fix AI + Maintenance OS** — diagnose + maintain anything
-2. **Warranty + Inventory Vault** — documents + tracking
-3. **Supreme Home / Matter** — smart home control
-4. **Noise + Vibration Doctor** — reuse DSP engine
-5. **Cameras + Guardian Home** — existing cameras + intelligence
+- Higher ticket
 
 ## Tech Stack
 
 - Android (Kotlin, Jetpack Compose)
+- Material3 with dynamic color
 - BLE/UWB (Android APIs)
 - Matter/Google Home APIs
-- CameraX / ML Kit
-- SupremeBass DSP engine
-- ONVIF/RTSP adapters
+- CameraX / ML Kit (OCR, barcode, document scanner)
+- ONVIF/RTSP (camera integration)
 - Coroutines + Flow
 - Room (local database)
+- SupremeBass DSP engine (FFT, harmonics, spectral analysis)
+
+## Priority Order (Completed)
+
+1. **Fix AI + Maintenance OS** ✅
+2. **Warranty + Inventory Vault** ✅
+3. **Network + Noise + Vibration Doctors** ✅
+4. **Camera Hub + Find** ✅
+5. **Home Hub + Utilities** ✅
+6. **Vehicle Hub + Leak Watch + Emergency** ✅
+
+## Files
+
+```
+Total: ~15,000 lines of Kotlin
+Modules: 14
+Screens: 10
+Unit tests: 66+
+```
