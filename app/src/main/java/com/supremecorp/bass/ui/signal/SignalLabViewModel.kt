@@ -262,25 +262,64 @@ class SignalLabViewModel(application: Application) : AndroidViewModel(applicatio
         _state.value = _state.value.copy(
             totalSweepSteps = plan.steps,
             currentSweepStep = 0,
-            sweepProgress = 0f
+            sweepProgress = 0f,
+            engineState = SignalEngineState.Running(
+                com.supremecorp.bass.signal.SignalSession(
+                    id = "sweep-${System.currentTimeMillis()}",
+                    config = SignalConfig(
+                        frequencyHz = plan.startHz,
+                        amplitude = plan.amplitude,
+                        waveform = plan.waveform
+                    ),
+                    audioConfig = AudioOutputConfig(sampleRate = s.sampleRate),
+                    startTime = System.currentTimeMillis(),
+                    route = OutputRoute.BUILT_IN_SPEAKER
+                )
+            )
         )
 
         sweepJob?.cancel()
         sweepJob = viewModelScope.launch(Dispatchers.Default) {
             val audioConfig = AudioOutputConfig(sampleRate = s.sampleRate)
+            val backend = com.supremecorp.bass.audio.backend.AndroidAudioTrackBackend()
+            val dspChain = com.supremecorp.bass.dsp.AudioDSPChain()
+            val limiter = com.supremecorp.bass.dsp.Limiter(ceiling = 0.95f)
             val buffer = FloatArray(1024)
 
-            signalEngine.start(
-                SignalConfig(
-                    frequencyHz = plan.startHz,
-                    amplitude = plan.amplitude,
-                    waveform = plan.waveform
-                ),
-                audioConfig
-            )
+            // Configure DSP with current settings
+            dspChain.configure(s.sampleRate)
+            dspChain.bassBoost.setBoost(s.dspState.bassBoostDb)
+            s.dspState.eqBands.forEachIndexed { index, gain ->
+                dspChain.eq.setBandGain(index, gain)
+            }
+            dspChain.virtualizer.setWidth(s.dspState.virtualizerWidth)
+
+            // Start audio backend directly (NOT signalEngine — we render sweep ourselves)
+            val backendResult = backend.start(audioConfig)
+            if (backendResult is AudioBackendResult.Failure) {
+                AppLogger.e("SignalLabViewModel", "Backend start failed for sweep")
+                _state.value = _state.value.copy(
+                    engineState = SignalEngineState.Idle,
+                    sweepProgress = 0f
+                )
+                return@launch
+            }
+
+            AppLogger.i("SignalLabViewModel", "Sweep started: ${plan.startHz}-${plan.endHz}Hz, ${plan.steps} steps")
 
             while (true) {
                 val sweepState = sweepEngine.render(buffer, 1024, s.sampleRate)
+
+                // Process through DSP chain (Bass → EQ → Virtualizer → Limiter)
+                dspChain.processStereo(buffer, 1024)
+
+                // Write to audio backend
+                val writeResult = backend.write(buffer, 1024)
+                if (writeResult is AudioBackendResult.Failure) {
+                    AppLogger.e("SignalLabViewModel", "Write failed during sweep")
+                    break
+                }
+
                 when (sweepState) {
                     is SweepState.Complete -> break
                     is SweepState.StepComplete -> {
@@ -292,7 +331,8 @@ class SignalLabViewModel(application: Application) : AndroidViewModel(applicatio
                 }
             }
 
-            signalEngine.stop()
+            backend.stop()
+            AppLogger.i("SignalLabViewModel", "Sweep complete")
             _state.value = _state.value.copy(
                 engineState = SignalEngineState.Idle,
                 sweepProgress = 1f
