@@ -1,23 +1,34 @@
-plugins {
-    kotlin("jvm") version "1.9.20"
+pluginManagement {
+    repositories {
+        gradlePluginPortal()
+        mavenCentral()
+    }
 }
 
-group = "com.supreme"
-version = "1.0-SNAPSHOT"
-
-repositories {
-    mavenCentral()
+dependencyResolution {
+    repositories {
+        mavenCentral()
+    }
 }
 
-dependencies {
-    testImplementation(kotlin("test"))
-    testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
-}
+rootProject.name = "supreme"
 
-tasks.test {
-    useJUnitPlatform()
-}
+include(":core:universal-model")
+include(":core:device-abstraction")
 
-kotlin {
-    jvmToolchain(17)
-}
+include(":modules:fix-ai")
+include(":modules:maintenance-os")
+include(":modules:warranty-vault")
+include(":modules:network-doctor")
+include(":modules:noise-doctor")
+include(":modules:vibration-doctor")
+include(":modules:camera-hub")
+include(":modules:find")
+include(":modules:home-hub")
+include(":modules:utilities")
+include(":modules:inventory")
+include(":modules:vehicle-hub")
+include(":modules:leak-watch")
+include(":modules:emergency")
+
+include(":apps:android")
