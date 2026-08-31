@@ -209,10 +209,12 @@ fun FlameLabScreen(
         // Start button
         Button(
             onClick = {
-                viewModel.startFrequencyResponseExperiment(
+                viewModel.startFlameExperiment(
                     name = "Flame: ${selectedFlameType.name} @ ${distance}m",
-                    steps = (duration.toIntOrNull() ?: 30),
-                    dwellMs = 1000
+                    frequencyHz = frequency.toDoubleOrNull() ?: 1000.0,
+                    amplitude = (amplitude.toDoubleOrNull() ?: 0.5).toFloat(),
+                    waveform = selectedWaveform,
+                    durationSeconds = duration.toIntOrNull() ?: 30
                 )
                 viewModel.markFlameExperimentCompleted()
             },

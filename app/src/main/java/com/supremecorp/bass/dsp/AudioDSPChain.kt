@@ -70,7 +70,7 @@ class AudioDSPChain {
         bassBoost.processStereo(buffer, frameCount)
         eq.processStereo(buffer, frameCount)
         virtualizer.process(buffer, frameCount)
-        limiter.process(buffer, frameCount)
+        limiter.processStereo(buffer, frameCount)
 
         bufferCount++
         processTimeUs = (System.nanoTime() - startTime) / 1000

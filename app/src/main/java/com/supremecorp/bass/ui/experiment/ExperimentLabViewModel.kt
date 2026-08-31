@@ -97,6 +97,56 @@ class ExperimentLabViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
+    /**
+     * Start a flame experiment with the specified parameters.
+     *
+     * This generates a digital acoustic signal with the given characteristics.
+     * It does NOT interact with physical flames — it's a signal generator only.
+     *
+     * @param name Experiment name
+     * @param frequencyHz Signal frequency in Hz
+     * @param amplitude Signal amplitude (0.0-1.0)
+     * @param waveform Signal waveform type
+     * @param durationSeconds Duration in seconds
+     */
+    fun startFlameExperiment(
+        name: String,
+        frequencyHz: Double,
+        amplitude: Float,
+        waveform: Waveform,
+        durationSeconds: Int
+    ) {
+        Log.i(TAG, "Starting flame experiment: $name | ${frequencyHz}Hz | amp=$amplitude | ${waveform.name} | ${durationSeconds}s")
+
+        val steps = durationSeconds // 1 step per second
+        val dwellMs = 1000 // 1 second per step
+
+        val experiment = AcousticExperiment(
+            name = name,
+            type = ExperimentType.FREQUENCY_RESPONSE,
+            variables = listOf(
+                ExperimentVariable("frequency", VariableType.FREQUENCY, "Hz", frequencyHz, frequencyHz, 0.0, frequencyHz),
+                ExperimentVariable("amplitude", VariableType.AMPLITUDE, "x", amplitude.toDouble(), amplitude.toDouble(), 0.0, amplitude.toDouble())
+            ),
+            signalConfig = SignalConfig(
+                frequencyHz = frequencyHz,
+                amplitude = amplitude,
+                waveform = waveform
+            ),
+            stepCount = steps,
+            dwellMs = dwellMs
+        )
+
+        viewModelScope.launch {
+            try {
+                runner.startExperiment(experiment)
+            } catch (e: Exception) {
+                Log.e(TAG, "Failed to start flame experiment: ${e.message}", e)
+                _state.update { it.copy(error = e.message) }
+            }
+        }
+    }
+
     fun startDistortionExperiment(name: String = "Distortion ${System.currentTimeMillis()}") {
         Log.i(TAG, "Starting distortion experiment: $name")
         val experiment = AcousticExperiment(

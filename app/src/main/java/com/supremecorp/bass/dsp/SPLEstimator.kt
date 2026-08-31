@@ -6,36 +6,57 @@ import kotlin.math.sqrt
 /**
  * SPL (Sound Pressure Level) estimator.
  *
- * Note: Without a calibrated microphone, this provides RELATIVE SPL values only.
- * The values represent relative loudness, not absolute dB SPL.
+ * CALIBRATION DOCTRINE:
+ * ─────────────────────
+ * Without a calibrated measurement microphone, this provides:
+ *   - dBFS (decibels relative to full scale) — hardware-dependent
+ *   - Relative level comparisons between recordings
+ *   - Loudness trends over time
  *
- * For absolute SPL measurement, a calibrated microphone and reference signal are required.
+ * This does NOT provide:
+ *   - Absolute dB SPL (sound pressure level in Pascals)
+ *   - Calibrated acoustic measurements
+ *
+ * For absolute dB SPL, you need:
+ *   1. Calibrated measurement microphone (e.g., Class 1 or Class 2)
+ *   2. Known microphone sensitivity (V/Pa)
+ *   3. Calibration reference (e.g., 94 dB SPL @ 1 kHz acoustic calibrator)
+ *   4. Transfer function: mic → preamp → ADC → digital
+ *
+ * The relationship is:
+ *   dB SPL = dBFS + microphone_sensitivity_dBFS_per_Pa + calibration_offset
+ *
+ * Until calibration is performed, report as:
+ *   "Relative Level: X dBFS" (NOT "SPL: X dB")
  */
 class SPLEstimator {
 
     companion object {
         private const val TAG = "SPLEstimator"
-
-        // Reference values (relative, not absolute SPL)
-        private const val REFERENCE_PRESSURE = 1.0 // Normalized reference
     }
 
+    /**
+     * Result of SPL estimation.
+     *
+     * IMPORTANT: splDb is RELATIVE ONLY — not absolute dB SPL.
+     * For absolute SPL, a calibrated microphone and reference are required.
+     */
     data class SPLResult(
-        val splDb: Double,           // Relative SPL in dB
-        val splDbFS: Double,         // Level in dBFS (full scale)
-        val peakDb: Double,          // Peak level
-        val rmsDb: Double,           // RMS level
-        val crestFactorDb: Double,   // Peak to RMS ratio
-        val loudnessLUFS: Double,    // Integrated loudness (EBU R128)
-        val dynamicRangeDb: Double   // Dynamic range
+        val relativeLevelDb: Double,   // Relative level in dB (NOT absolute SPL)
+        val splDbFS: Double,           // Level in dBFS (full scale)
+        val peakDb: Double,            // Peak level in dBFS
+        val rmsDb: Double,             // RMS level in dBFS
+        val crestFactorDb: Double,     // Peak to RMS ratio
+        val loudnessLUFS: Double,      // Integrated loudness (EBU R128)
+        val dynamicRangeDb: Double     // Dynamic range
     )
 
     /**
-     * Estimate SPL from audio samples.
+     * Estimate level from audio samples.
      *
      * @param samples Audio samples (normalized -1.0 to 1.0)
      * @param sampleRate Sample rate in Hz
-     * @return SPL estimation result
+     * @return Level estimation result (relative, not absolute SPL)
      */
     fun estimate(samples: FloatArray, sampleRate: Int): SPLResult {
         val n = samples.size
@@ -56,9 +77,10 @@ class SPLEstimator {
         val rmsDbFS = if (rms > 1e-20) 20.0 * log10(rms) else -200.0
         val peakDbFS = if (peak > 1e-20) 20.0 * log10(peak) else -200.0
 
-        // Relative SPL (shifted so typical speech is ~60-70 dB)
-        // This is NOT absolute SPL - just relative loudness
-        val splDb = rmsDbFS + 94.0 // Offset to approximate typical SPL range
+        // Relative level — NO arbitrary offset
+        // This is dBFS, not dB SPL. To convert to dB SPL, use:
+        //   dB_SPL = dBFS + mic_sensitivity + cal_offset
+        val relativeLevel = rmsDbFS
 
         // Crest factor (headroom)
         val crestFactorDb = peakDbFS - rmsDbFS
@@ -70,7 +92,7 @@ class SPLEstimator {
         val dynamicRange = estimateDynamicRange(samples, sampleRate)
 
         return SPLResult(
-            splDb = splDb.coerceIn(0.0, 140.0),
+            relativeLevelDb = relativeLevel.coerceIn(-100.0, 0.0),
             splDbFS = rmsDbFS.coerceIn(-100.0, 0.0),
             peakDb = peakDbFS.coerceIn(-100.0, 0.0),
             rmsDb = rmsDbFS.coerceIn(-100.0, 0.0),
@@ -146,49 +168,43 @@ class SPLEstimator {
     }
 
     /**
-     * Get a descriptive label for the SPL level.
+     * Get a descriptive label for the relative level.
+     *
+     * NOTE: These are rough approximations based on typical recording levels.
+     * Actual SPL depends on microphone sensitivity and gain staging.
      */
-    fun getSPLDescription(splDb: Double): String {
+    fun getLevelDescription(relativeLevelDb: Double): String {
         return when {
-            splDb < 30 -> "Very quiet (whisper)"
-            splDb < 50 -> "Quiet (quiet room)"
-            splDb < 65 -> "Moderate (normal conversation)"
-            splDb < 80 -> "Loud (busy traffic)"
-            splDb < 90 -> "Very loud (power tools)"
-            splDb < 100 -> "Extremely loud (motorcycle)"
-            splDb < 110 -> "Pain threshold (rock concert)"
-            splDb < 120 -> "Painful (jackhammer)"
-            splDb < 130 -> "Threshold of pain"
-            else -> "Dangerous (hearing damage risk)"
+            relativeLevelDb < -60 -> "Very quiet (near noise floor)"
+            relativeLevelDb < -40 -> "Quiet (low-level signal)"
+            relativeLevelDb < -20 -> "Moderate (typical speech level)"
+            relativeLevelDb < -10 -> "Loud (strong signal)"
+            relativeLevelDb < -6 -> "Very loud (near clipping)"
+            else -> "Extremely loud (approaching full scale)"
         }
     }
 
     /**
-     * Check if SPL level poses hearing risk.
+     * Get calibration instructions for converting to absolute SPL.
      */
-    fun isHearingRisk(splDb: Double, durationSeconds: Double): Boolean {
-        // OSHA/NIOSH exposure limits (simplified)
-        return when {
-            splDb >= 115 -> true // Always risky
-            splDb >= 100 && durationSeconds > 15 * 60 -> true // 15 minutes
-            splDb >= 95 && durationSeconds > 45 * 60 -> true // 45 minutes
-            splDb >= 90 && durationSeconds > 8 * 3600 -> true // 8 hours
-            splDb >= 85 && durationSeconds > 8 * 3600 -> true // 8 hours
-            else -> false
-        }
-    }
-
-    /**
-     * Get maximum safe exposure time for given SPL.
-     */
-    fun getMaxExposureTime(splDb: Double): Double {
-        return when {
-            splDb >= 115 -> 0.0 // Immediate danger
-            splDb >= 100 -> 15.0 * 60 // 15 minutes
-            splDb >= 95 -> 45.0 * 60 // 45 minutes
-            splDb >= 90 -> 8.0 * 3600 // 8 hours
-            splDb >= 85 -> 8.0 * 3600 // 8 hours
-            else -> Double.MAX_VALUE // Safe indefinitely
-        }
+    fun getCalibrationInstructions(): String {
+        return """
+            To convert relative dBFS to absolute dB SPL:
+            
+            1. Use a calibrated measurement microphone (Class 1 or Class 2)
+            2. Connect to a 94 dB SPL acoustic calibrator (1 kHz tone)
+            3. Record the calibrator output
+            4. Measure the dBFS level of the recorded calibrator tone
+            5. Calculate: offset = 94.0 - measured_dBFS
+            6. Apply: dB_SPL = dBFS + offset
+            
+            Example:
+              - Calibrator: 94 dB SPL @ 1 kHz
+              - Recorded level: -26 dBFS
+              - Offset: 94 - (-26) = 120
+              - Future measurement at -20 dBFS = -20 + 120 = 100 dB SPL
+            
+            Reference: IEC 61672-1 (Sound Level Meters)
+        """.trimIndent()
     }
 }
