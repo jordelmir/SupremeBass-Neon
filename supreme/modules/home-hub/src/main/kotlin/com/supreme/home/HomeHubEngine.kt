@@ -144,7 +144,7 @@ class HomeHubEngine {
 
         // Check for open doors/windows
         devices.values.filter {
-            it.type == DeviceType.LOCK && !it.isLocked
+            it.type == DeviceType.LOCK && it.isLocked != true
         }.forEach { device ->
             issues.add(SafetyIssue(
                 type = IssueType.DOOR_UNLOCKED,
@@ -306,3 +306,8 @@ data class EnergySummary(
     val estimatedDailyKwh: Double,
     val monthlyCostEstimate: Double
 )
+
+sealed class CommandResult {
+    data class Success(val data: Map<String, Any>) : CommandResult()
+    data class Error(val message: String) : CommandResult()
+}

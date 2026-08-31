@@ -59,7 +59,7 @@ class LeakWatchEngine {
                 sensorName = sensor?.name ?: sensorId,
                 location = sensor?.location ?: "Unknown",
                 flowRate = reading.flowRateLpm,
-                severity = if (reading.flowRateLpm > 10) Severity.CRITICAL else Severity.HIGH,
+                severity = if ((reading.flowRateLpm ?: 0.0) > 10) Severity.CRITICAL else Severity.HIGH,
                 action = LeakAction.DETECTED
             ))
         }

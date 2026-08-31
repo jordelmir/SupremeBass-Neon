@@ -39,6 +39,15 @@ value class ObservationId(val value: String) {
     }
 }
 
+data class DocumentRef(
+    val id: String = UUID.randomUUID().toString(),
+    val name: String,
+    val type: String,
+    val path: String? = null,
+    val uri: String? = null,
+    val createdAt: Instant = Instant.now()
+)
+
 @JvmInline
 value class AnomalyId(val value: String) {
     companion object {

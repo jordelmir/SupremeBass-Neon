@@ -32,10 +32,10 @@ class NoiseViewModel(application: Application) : BaseViewModel(application) {
                 _uiState.value = NoiseUiState(
                     isRecording = false,
                     isAnalyzing = false,
-                    dominantFrequency = result.dominantFrequency,
-                    harmonics = result.harmonics.map { it.frequency },
-                    classification = result.classification,
-                    suggestions = result.potentialCauses
+                    dominantFrequency = result.dominantFrequency.toFloat(),
+                    harmonics = result.harmonics.map { it.frequency.toFloat() },
+                    classification = result.noiseType.name,
+                    suggestions = result.diagnosis.causes.map { it.name }
                 )
             } catch (e: Exception) {
                 _uiState.value = NoiseUiState(

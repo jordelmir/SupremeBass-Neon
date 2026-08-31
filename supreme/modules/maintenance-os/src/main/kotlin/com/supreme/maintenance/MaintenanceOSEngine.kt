@@ -55,8 +55,9 @@ class MaintenanceOSEngine {
             dueSoonTasks = dueSoon,
             upcomingTasks = upcoming,
             completedThisMonth = allTasks.filter {
-                it.completedDate != null &&
-                        it.completedDate.isAfter(now.minus(30, ChronoUnit.DAYS))
+                val completedDate = it.completedDate
+                completedDate != null &&
+                        completedDate.isAfter(now.minus(30, ChronoUnit.DAYS))
             },
             estimatedMonthlyCost = allTasks.sumOf { it.estimatedCost ?: 0.0 }
         )
@@ -93,7 +94,8 @@ class MaintenanceOSEngine {
                     if (it.id == taskId) completed else it
                 }
                 val nextTask = if (task.recurring && task.intervalDays != null) {
-                    val nextDue = Instant.now().plus(task.intervalDays.toLong(), ChronoUnit.DAYS)
+                    val intervalDays = task.intervalDays!!
+                    val nextDue = Instant.now().plus(intervalDays.toLong(), ChronoUnit.DAYS)
                     MaintenanceTask(
                         id = MaintenanceId.generate(),
                         assetId = task.assetId,

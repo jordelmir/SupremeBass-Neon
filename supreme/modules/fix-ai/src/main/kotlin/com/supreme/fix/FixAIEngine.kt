@@ -119,9 +119,10 @@ class FixAIEngine {
         assetCategory: AssetCategory? = null
     ): Diagnosis {
         val imageAnalysis = analyzeImage(imageBytes)
-        val causes = rankCauses(imageAnalysis, assetCategory)
-        val checks = generateChecks(imageAnalysis, assetCategory)
-        val nextTests = generateNextTests(imageAnalysis, causes)
+        val combined = CombinedAnalysis(image = imageAnalysis, userDescription = userDescription, confidence = 0.5)
+        val causes = rankCauses(combined, assetCategory)
+        val checks = generateChecks(combined, assetCategory)
+        val nextTests = generateNextTests(combined, causes)
 
         return Diagnosis(
             inputType = DiagnosisInputType.CAMERA_ONLY,
@@ -129,7 +130,7 @@ class FixAIEngine {
             checks = checks,
             nextTests = nextTests,
             confidence = calculateOverallConfidence(causes, checks),
-            rawAnalysis = imageAnalysis.toString()
+            rawAnalysis = combined.toString()
         )
     }
 

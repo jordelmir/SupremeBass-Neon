@@ -88,7 +88,7 @@ class VibrationDoctorEngine {
         val analysis = VibrationAnalysis(
             timestamp = Instant.now(),
             rmsG = totalRMS,
-            peakG = totalPeak,
+            peakG = totalPeak.toDouble(),
             rmsX = rmsX,
             rmsY = rmsY,
             rmsZ = rmsZ,
@@ -262,7 +262,7 @@ class VibrationDoctorEngine {
 
         return SpectralFeatures(
             centroid = centroid,
-            rolloff = rolloff,
+            rolloff = rolloff.toDouble(),
             bandwidth = bandwidth
         )
     }

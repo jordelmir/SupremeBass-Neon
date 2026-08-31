@@ -1,7 +1,10 @@
 package com.supreme.core.device
 
 import com.supreme.core.*
+import java.time.Instant
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
 
@@ -394,7 +397,7 @@ class SmartPlugDevice(
 interface ThermalCameraAdapter {
     suspend fun connect(): Boolean
     suspend fun disconnect()
-    suspend fun isConnected(): Boolean
+    fun isConnected(): Boolean
     suspend fun captureFrame(): ThermalFrame
 }
 
@@ -407,7 +410,7 @@ interface BLEScanner {
 interface MatterController {
     suspend fun connect(deviceId: String): Boolean
     suspend fun disconnect(deviceId: String)
-    suspend fun isConnected(deviceId: String): Boolean
+    fun isConnected(deviceId: String): Boolean
     suspend fun getReadings(deviceId: String): Map<String, Double>
     suspend fun setSwitch(deviceId: String, on: Boolean)
     suspend fun getDeviceList(): List<DeviceIdentity>
@@ -440,6 +443,4 @@ data class BLEScanResult(
 // HELPER: MutableStateFlow
 // ─────────────────────────────────────────────────────────────
 
-class MutableDeviceStateFlow<T>(initial: T) : StateFlow<T> by kotlinx.coroutines.flow.MutableStateFlow(initial) {
-    // This is a simplified wrapper; in production use MutableStateFlow directly
-}
+class MutableDeviceStateFlow<T>(initial: T) : MutableStateFlow<T> by kotlinx.coroutines.flow.MutableStateFlow(initial)

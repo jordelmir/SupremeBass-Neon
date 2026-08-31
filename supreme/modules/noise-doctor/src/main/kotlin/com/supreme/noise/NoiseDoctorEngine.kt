@@ -227,7 +227,7 @@ class NoiseDoctorEngine {
 
         return SpectralFeatures(
             centroid = centroid,
-            rolloff = rolloff,
+            rolloff = rolloff.toDouble(),
             bandwidth = bandwidth,
             rms = rms,
             peak = peak,

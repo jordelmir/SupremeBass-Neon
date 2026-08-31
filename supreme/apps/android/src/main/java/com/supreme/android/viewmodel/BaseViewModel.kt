@@ -7,5 +7,5 @@ import com.supreme.android.di.AppContainer
 
 abstract class BaseViewModel(application: Application) : AndroidViewModel(application) {
     protected val container: AppContainer
-        get() = (application as SupremeApplication).container
+        get() = (getApplication<SupremeApplication>()).container
 }

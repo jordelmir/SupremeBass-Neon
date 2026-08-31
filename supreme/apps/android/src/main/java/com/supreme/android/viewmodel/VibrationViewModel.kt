@@ -35,13 +35,13 @@ class VibrationViewModel(application: Application) : BaseViewModel(application) 
                 _uiState.value = VibrationUiState(
                     isRecording = false,
                     isAnalyzing = false,
-                    rmsX = result.rmsX,
-                    rmsY = result.rmsY,
-                    rmsZ = result.rmsZ,
-                    totalRMS = result.totalRMS,
-                    dominantFrequency = result.dominantFrequency,
-                    baselineComparison = result.baselineComparison,
-                    suggestions = result.recommendations
+                    rmsX = result.rmsX.toFloat(),
+                    rmsY = result.rmsY.toFloat(),
+                    rmsZ = result.rmsZ.toFloat(),
+                    totalRMS = result.rmsG.toFloat(),
+                    dominantFrequency = result.dominantFrequency.toFloat(),
+                    baselineComparison = result.baselineDeviation?.let { "RMS Deviation: ${String.format("%.1f", it.rmsDeviation * 100)}%" } ?: "No baseline",
+                    suggestions = result.diagnosis.recommendations
                 )
             } catch (e: Exception) {
                 _uiState.value = VibrationUiState(

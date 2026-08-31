@@ -255,7 +255,7 @@ class WarrantyVaultEngine {
             purchasePrice = price,
             serialNumber = fields["serial"],
             isActive = true,
-            daysRemaining = ChronoUnit.DAYS.between(Instant.now(), warrantyEnd).toInt()
+            daysRemaining = ChronoUnit.DAYS.between(Instant.now(), warrantyEnd)
         )
     }
 

@@ -18,14 +18,14 @@ android {
 
     signingConfigs {
         create("release") {
-            val keystorePath = System.getenv("KEYSTORE_PATH") ?: "release.keystore"
-            val keystorePassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
-            val keyAlias = System.getenv("KEY_ALIAS") ?: ""
-            val keyPassword = System.getenv("KEY_PASSWORD") ?: ""
-            storeFile = file(keystorePath)
-            storePassword = keystorePassword
-            this.keyAlias = keyAlias
-            keyPassword = keyPassword
+            val ksPath = System.getenv("KEYSTORE_PATH") ?: "release.keystore"
+            val ksPassword = System.getenv("KEYSTORE_PASSWORD") ?: ""
+            val ksAlias = System.getenv("KEY_ALIAS") ?: ""
+            val ksKeyPassword = System.getenv("KEY_PASSWORD") ?: ""
+            storeFile = file(ksPath)
+            storePassword = ksPassword
+            keyAlias = ksAlias
+            keyPassword = ksKeyPassword
         }
     }
 
@@ -57,7 +57,7 @@ android {
     }
 
     composeOptions {
-        kotlinCompilerExtensionVersion = "1.5.3"
+        kotlinCompilerExtensionVersion = "1.5.4"
     }
 
     lint {
@@ -118,7 +118,7 @@ dependencies {
     // ML Kit
     implementation("com.google.mlkit:barcode-scanning:17.2.0")
     implementation("com.google.mlkit:text-recognition:16.0.0")
-    implementation("com.google.mlkit:document-scanner:16.0.0-beta1")
+    implementation("com.google.android.gms:play-services-mlkit-document-scanner:16.0.0-beta1")
 
     // Room
     implementation("androidx.room:room-runtime:2.6.1")
