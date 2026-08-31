@@ -12,6 +12,11 @@ repositories {
 dependencies {
     implementation(project(":core:domain"))
     testImplementation(kotlin("test"))
+    testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
+}
+
+tasks.test {
+    useJUnitPlatform()
 }
 
 kotlin {
