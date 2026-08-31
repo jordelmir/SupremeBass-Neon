@@ -9,17 +9,14 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavType
 import androidx.navigation.compose.*
 import androidx.navigation.navArgument
 import com.supreme.android.navigation.SupremeNavGraph
 import com.supreme.android.ui.theme.SupremeTheme
+import com.supreme.android.viewmodel.SupremeViewModelFactory
 
-/**
- * Supreme — Everyday Intelligence Platform
- *
- * The main Android activity. Hosts the Compose navigation graph.
- */
 class SupremeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -63,7 +60,7 @@ fun SupremeApp() {
                     onClick = { navController.navigate("fix") }
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Build, contentDescription = "Tools") },
+                    icon = { Icon(Icons.Default.Handyman, contentDescription = "Tools") },
                     label = { Text("Tools") },
                     selected = currentRoute?.startsWith("tools") == true,
                     onClick = { navController.navigate("tools") }
