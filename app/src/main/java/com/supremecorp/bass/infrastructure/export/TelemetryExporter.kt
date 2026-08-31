@@ -36,7 +36,10 @@ class TelemetryExporter {
         metrics.put("peak", telemetry.peak.toDouble())
         metrics.put("rms", telemetry.rms.toDouble())
         metrics.put("durationMs", telemetry.durationMs)
-        metrics.put("underruns", telemetry.underruns)
+        metrics.put("clippedSamples", telemetry.clippedSamples)
+        metrics.put("underrunCount", telemetry.underrunCount)
+        metrics.put("partialWrites", telemetry.partialWrites)
+        metrics.put("framesWritten", telemetry.framesWritten)
         json.put("metrics", metrics)
 
         json.put("audioRoute", telemetry.audioRoute.name)

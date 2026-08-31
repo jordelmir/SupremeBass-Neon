@@ -10,16 +10,42 @@ import com.supremecorp.bass.audio.backend.AudioOutputBackend
 import com.supremecorp.bass.audio.safety.AcousticSafetyController
 import com.supremecorp.bass.audio.safety.AudioRouteMonitor
 import com.supremecorp.bass.audio.safety.RouteChangeListener
-import com.supremecorp.bass.audio.safety.SafetyStopReason
 import com.supremecorp.bass.core.logging.AppLogger
 import com.supremecorp.bass.domain.model.*
 import com.supremecorp.bass.dsp.AudioDSPChain
-import com.supremecorp.bass.dsp.Limiter
+import com.supremecorp.bass.dsp.DSPStats
 import com.supremecorp.bass.dsp.Oscillator
 import com.supremecorp.bass.dsp.SignalGenerator
+import com.supremecorp.bass.domain.model.SignalTelemetry
 import com.supremecorp.bass.ui.settings.AudioSettingsPrefs
 import java.util.UUID
+import java.util.concurrent.atomic.AtomicInteger
+import java.util.concurrent.atomic.AtomicLong
 import java.util.concurrent.atomic.AtomicReference
+
+/**
+ * Immutable snapshot of DSP configuration at start time.
+ * Prevents UI-modified DSP state from being reset during playback.
+ */
+data class DspConfiguration(
+    val bassBoostDb: Float,
+    val eqEnabled: Boolean,
+    val eqBandGains: List<Double>,
+    val virtualizerWidth: Float,
+    val limiterCeiling: Float
+) {
+    companion object {
+        fun fromChain(chain: AudioDSPChain): DspConfiguration {
+            return DspConfiguration(
+                bassBoostDb = chain.bassBoost.getBoost(),
+                eqEnabled = true,
+                eqBandGains = chain.eq.getBands().map { it.gainDb },
+                virtualizerWidth = chain.virtualizer.getWidth(),
+                limiterCeiling = 0.95f
+            )
+        }
+    }
+}
 
 class SignalEngine(
     private val context: Context,
@@ -39,6 +65,12 @@ class SignalEngine(
     private var wakeLock: PowerManager.WakeLock? = null
     private var currentConfig: SignalConfig? = null
 
+    // Telemetry counters (separated, not conflated)
+    private val clippedSamplesCounter = AtomicInteger(0)
+    private val underrunCounter = AtomicInteger(0)
+    private val partialWriteCounter = AtomicInteger(0)
+    private val framesWrittenCounter = AtomicLong(0L)
+
     // Safety ramp state
     private var rampSamplesRemaining: Int = 0
     private var rampTotalSamples: Int = 0
@@ -55,83 +87,119 @@ class SignalEngine(
     fun getState(): SignalEngineState = state.get()
 
     fun start(config: SignalConfig, audioConfig: AudioOutputConfig = AudioOutputConfig()): Boolean {
-        val currentState = state.get()
-        if (currentState is SignalEngineState.Running) {
-            AppLogger.w("SignalEngine", "Already running, stop first")
+        // CAS: IDLE → PREPARING
+        if (!state.compareAndSet(SignalEngineState.Idle, SignalEngineState.Preparing)) {
+            AppLogger.w("SignalEngine", "Cannot start: state=${state.get().name()}")
             return false
         }
 
-        state.set(SignalEngineState.Preparing)
+        try {
+            val safeConfig = config.withNyquistGuard(audioConfig.sampleRate)
+            val safetyCheck = safetyController.validateConfig(safeConfig)
+            if (safetyCheck is com.supremecorp.bass.audio.safety.SafetyCheckResult.Blocked) {
+                AppLogger.e("SignalEngine", "Safety blocked: ${safetyCheck.reason}")
+                state.set(SignalEngineState.Failed(SignalEngineError.SpeakerRouteRequired))
+                return false
+            }
 
-        val safeConfig = config.withNyquistGuard(audioConfig.sampleRate)
-        val safetyCheck = safetyController.validateConfig(safeConfig)
-        if (safetyCheck is com.supremecorp.bass.audio.safety.SafetyCheckResult.Blocked) {
-            AppLogger.e("SignalEngine", "Safety blocked: ${safetyCheck.reason}")
-            state.set(SignalEngineState.Failed(SignalEngineError.SpeakerRouteRequired))
+            val clampedAmplitude = safetyController.clampAmplitude(safeConfig.amplitude)
+            val finalConfig = safeConfig.copy(amplitude = clampedAmplitude)
+            currentConfig = finalConfig
+
+            // Snapshot DSP config BEFORE starting — prevents UI race conditions
+            val dspSnapshot = DspConfiguration.fromChain(dspChain)
+
+            generator.configure(audioConfig.sampleRate)
+            generator.reset()
+
+            // Configure DSP without resetting user settings
+            dspChain.configure(audioConfig.sampleRate)
+            applyDspSnapshot(dspSnapshot)
+
+            safetyController.setRoute(routeMonitor.getCurrentRoute())
+            safetyController.routeInterlockEnabled = AudioSettingsPrefs.routeInterlock(context)
+
+            val backendResult = backend.start(audioConfig)
+            if (backendResult is AudioBackendResult.Failure) {
+                AppLogger.e("SignalEngine", "Backend start failed: ${backendResult.error}")
+                state.set(SignalEngineState.Failed(backendResult.error))
+                return false
+            }
+
+            // Connect the routed device supplier for accurate route detection
+            if (backend is AndroidAudioTrackBackend) {
+                routeMonitor.setRoutedDeviceSupplier { backend.getRoutedDevice() }
+            }
+
+            val session = SignalSession(
+                id = UUID.randomUUID().toString(),
+                config = finalConfig,
+                audioConfig = audioConfig,
+                startTime = System.currentTimeMillis(),
+                route = routeMonitor.getCurrentRoute()
+            )
+
+            acquireWakeLock()
+            routeMonitor.setListener(routeChangeListener)
+            routeMonitor.start()
+            safetyController.onSessionStart()
+
+            // Initialize safety ramp
+            rampTotalSamples = safetyController.getRampUpSamples(audioConfig.sampleRate)
+            rampSamplesRemaining = rampTotalSamples
+            isRampingUp = true
+
+            // Reset telemetry counters
+            clippedSamplesCounter.set(0)
+            underrunCounter.set(0)
+            partialWriteCounter.set(0)
+            framesWrittenCounter.set(0L)
+
+            // CAS: PREPARING → RUNNING
+            if (!state.compareAndSet(SignalEngineState.Preparing, SignalEngineState.Running(session))) {
+                AppLogger.e("SignalEngine", "State transition failed during start")
+                backend.stop()
+                releaseWakeLock()
+                return false
+            }
+
+            audioThread = Thread({
+                renderLoop(session, finalConfig, audioConfig, dspSnapshot)
+            }, "SignalEngine-Render").apply {
+                priority = Thread.MAX_PRIORITY
+                start()
+            }
+
+            AppLogger.i("SignalEngine", "Started session ${session.id}: " +
+                    "${finalConfig.waveform} ${finalConfig.frequencyHz}Hz " +
+                    "amp=${finalConfig.amplitude} @ ${audioConfig.sampleRate}Hz")
+
+            return true
+
+        } catch (e: Exception) {
+            AppLogger.e("SignalEngine", "Start failed: ${e.message}")
+            state.set(SignalEngineState.Idle)
             return false
         }
+    }
 
-        val clampedAmplitude = safetyController.clampAmplitude(safeConfig.amplitude)
-        val finalConfig = safeConfig.copy(amplitude = clampedAmplitude)
-        currentConfig = finalConfig
-
-        generator.configure(audioConfig.sampleRate)
-        generator.reset()
-        dspChain.configure(audioConfig.sampleRate)
-        dspChain.reset()
-        safetyController.setRoute(routeMonitor.getCurrentRoute())
-        safetyController.routeInterlockEnabled = AudioSettingsPrefs.routeInterlock(context)
-
-        val backendResult = backend.start(audioConfig)
-        if (backendResult is AudioBackendResult.Failure) {
-            AppLogger.e("SignalEngine", "Backend start failed: ${backendResult.error}")
-            state.set(SignalEngineState.Failed(backendResult.error))
-            return false
+    /**
+     * Apply a DSP snapshot without calling reset() on the chain.
+     * This preserves user EQ/bass/virtualizer settings across start/stop cycles.
+     */
+    private fun applyDspSnapshot(snapshot: DspConfiguration) {
+        dspChain.bassBoost.setBoost(snapshot.bassBoostDb)
+        snapshot.eqBandGains.forEachIndexed { index, gain ->
+            dspChain.eq.setBandGain(index, gain)
         }
-
-        // Connect the routed device supplier for accurate route detection
-        if (backend is AndroidAudioTrackBackend) {
-            routeMonitor.setRoutedDeviceSupplier { backend.getRoutedDevice() }
-        }
-
-        val session = SignalSession(
-            id = UUID.randomUUID().toString(),
-            config = finalConfig,
-            audioConfig = audioConfig,
-            startTime = System.currentTimeMillis(),
-            route = routeMonitor.getCurrentRoute()
-        )
-
-        acquireWakeLock()
-        routeMonitor.setListener(routeChangeListener)
-        routeMonitor.start()
-        safetyController.onSessionStart()
-
-        // Initialize safety ramp
-        rampTotalSamples = safetyController.getRampUpSamples(audioConfig.sampleRate)
-        rampSamplesRemaining = rampTotalSamples
-        isRampingUp = true
-
-        state.set(SignalEngineState.Running(session))
-
-        audioThread = Thread({
-            renderLoop(session, finalConfig, audioConfig)
-        }, "SignalEngine-Render").apply {
-            priority = Thread.MAX_PRIORITY
-            start()
-        }
-
-        AppLogger.i("SignalEngine", "Started session ${session.id}: " +
-                "${finalConfig.waveform} ${finalConfig.frequencyHz}Hz " +
-                "amp=${finalConfig.amplitude} @ ${audioConfig.sampleRate}Hz")
-
-        return true
+        dspChain.virtualizer.setWidth(snapshot.virtualizerWidth)
     }
 
     private fun renderLoop(
         session: SignalSession,
         config: SignalConfig,
-        audioConfig: AudioOutputConfig
+        audioConfig: AudioOutputConfig,
+        dspSnapshot: DspConfiguration
     ) {
         val bufferFrames = 1024
         val buffer = FloatArray(bufferFrames * audioConfig.channelCount)
@@ -142,7 +210,6 @@ class SignalEngine(
             val safetyStop = safetyController.shouldStop()
             if (safetyStop != null) {
                 AppLogger.w("SignalEngine", "Safety stop: $safetyStop")
-                // Initiate ramp-down before stopping
                 isRampingDown = true
                 rampDownRemaining = safetyController.getRampDownSamples(audioConfig.sampleRate)
             }
@@ -183,10 +250,14 @@ class SignalEngine(
                     state.set(SignalEngineState.Failed(result.error))
                     break
                 }
-                is AudioBackendResult.Success -> { /* continue */ }
+                is AudioBackendResult.Success -> {
+                    framesWrittenCounter.addAndGet(bufferFrames.toLong())
+                }
             }
 
-            // If ramp-down complete, stop
+            // Track clipped samples from limiter
+            clippedSamplesCounter.addAndGet(dspChain.limiter.clippedSamples.toLong().toInt())
+
             if (isRampingDown && rampDownRemaining <= 0) {
                 AppLogger.i("SignalEngine", "Ramp-down complete, stopping")
                 break
@@ -284,7 +355,10 @@ class SignalEngine(
             rms = dspChain.limiter.rms,
             durationMs = elapsed,
             audioRoute = session.route,
-            underruns = dspChain.limiter.clippedSamples,
+            clippedSamples = clippedSamplesCounter.get(),
+            underrunCount = underrunCounter.get(),
+            partialWrites = partialWriteCounter.get(),
+            framesWritten = framesWrittenCounter.get(),
             terminationReason = state.get().name()
         )
     }

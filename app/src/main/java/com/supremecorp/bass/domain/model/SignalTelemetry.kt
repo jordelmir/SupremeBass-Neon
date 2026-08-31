@@ -16,6 +16,9 @@ data class SignalTelemetry(
     val rms: Float,
     val durationMs: Long,
     val audioRoute: OutputRoute,
-    val underruns: Int,
+    val clippedSamples: Int,
+    val underrunCount: Int,
+    val partialWrites: Int,
+    val framesWritten: Long,
     val terminationReason: String
 )

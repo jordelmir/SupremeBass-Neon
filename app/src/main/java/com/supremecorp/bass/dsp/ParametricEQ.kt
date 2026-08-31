@@ -104,6 +104,7 @@ class ParametricEQ {
 
     /**
      * Process interleaved stereo buffer through all EQ bands (in-place).
+     * Each channel has independent filter state — no cross-channel contamination.
      */
     fun processStereo(buffer: FloatArray, frameCount: Int) {
         for (i in 0 until frameCount) {
@@ -111,16 +112,10 @@ class ParametricEQ {
             var right = buffer[i * 2 + 1].toDouble()
 
             for (filter in filters) {
-                // Process left channel
-                val tempFilter = filter
-                left = tempFilter.process(left)
+                left = filter.process(left, 0)  // Channel 0 = Left
+                right = filter.process(right, 1) // Channel 1 = Right
             }
-            // Reset filters for right channel processing
-            // Actually, for stereo we need to process left and right through separate filter states
-            // Since BiquadFilter has state, we need to use processStereo or handle differently
 
-            // For now, process both channels through the same filter (not ideal but functional)
-            // A proper implementation would have separate filter instances for L/R
             buffer[i * 2] = (left * outputGain).toFloat()
             buffer[i * 2 + 1] = (right * outputGain).toFloat()
         }

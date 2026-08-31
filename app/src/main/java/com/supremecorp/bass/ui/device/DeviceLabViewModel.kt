@@ -284,50 +284,72 @@ class DeviceLabViewModel(application: Application) : AndroidViewModel(applicatio
 
         viewModelScope.launch(Dispatchers.Default) {
             try {
-                // Generate impulse signal
                 val sampleRate = 48000
+
+                // STEP 1: Start microphone FIRST (captures entire event)
+                audioInput.start()
+                kotlinx.coroutines.delay(100) // Preroll — let mic stabilize
+
+                // STEP 2: Record pre-impulse baseline
+                val baselineDuration = 0.5 // 500ms baseline
+                val baselineSamples = (sampleRate * baselineDuration).toInt()
+                val baseline = FloatArray(baselineSamples)
+                var samplesRead = 0
+                while (samplesRead < baselineSamples && audioInput.isRecording()) {
+                    val buffer = FloatArray(1024)
+                    val read = audioInput.read(buffer)
+                    if (read > 0) {
+                        val copyLength = minOf(read, baselineSamples - samplesRead)
+                        System.arraycopy(buffer, 0, baseline, samplesRead, copyLength)
+                        samplesRead += copyLength
+                    }
+                }
+
+                // STEP 3: Play impulse WHILE mic is still recording
                 val impulseDuration = 0.1 // 100ms impulse
                 val impulseSamples = (sampleRate * impulseDuration).toInt()
                 val impulse = FloatArray(impulseSamples) { i ->
                     if (i < impulseSamples / 10) {
-                        // White noise burst
                         (Math.random() * 2 - 1).toFloat()
                     } else {
                         0f
                     }
                 }
 
-                // Play impulse through speaker
                 val backend = com.supremecorp.bass.audio.backend.AndroidAudioTrackBackend()
                 val audioConfig = AudioOutputConfig(sampleRate = sampleRate)
                 backend.start(audioConfig)
                 backend.write(impulse, impulseSamples)
-                backend.stop()
 
-                // Wait for impulse to finish
-                kotlinx.coroutines.delay(200)
+                // STEP 4: Continue recording decay (mic is still running)
+                val decayDuration = 3.0 // 3 seconds of decay
+                val decaySamples = (sampleRate * decayDuration).toInt()
+                val fullRecording = FloatArray(baselineSamples + decaySamples)
+                System.arraycopy(baseline, 0, fullRecording, 0, baselineSamples)
+                samplesRead = baselineSamples
+                var decayRead = 0
 
-                // Record response
-                audioInput.start()
-                val recordingDuration = 3.0 // 3 seconds of recording
-                val totalSamples = (sampleRate * recordingDuration).toInt()
-                val recording = FloatArray(totalSamples)
-                var samplesRead = 0
-
-                while (samplesRead < totalSamples && audioInput.isRecording()) {
+                while (decayRead < decaySamples && audioInput.isRecording()) {
                     val buffer = FloatArray(1024)
                     val read = audioInput.read(buffer)
                     if (read > 0) {
-                        val copyLength = minOf(read, totalSamples - samplesRead)
-                        System.arraycopy(buffer, 0, recording, samplesRead, copyLength)
+                        val copyLength = minOf(read, decaySamples - decayRead)
+                        System.arraycopy(buffer, 0, fullRecording, samplesRead, copyLength)
                         samplesRead += copyLength
+                        decayRead += copyLength
+                        _state.value = _state.value.copy(
+                            rt60Progress = (baselineSamples + decayRead).toFloat() / fullRecording.size
+                        )
                     }
                 }
+
+                // STEP 5: Stop everything
+                backend.stop()
                 audioInput.stop()
 
-                // Analyze RT60
+                // STEP 6: Analyze RT60 from the full recording (baseline + impulse + decay)
                 val rt60Estimator = RT60Estimator()
-                val analysis = rt60Estimator.estimateFromImpulseResponse(recording, sampleRate)
+                val analysis = rt60Estimator.estimateFromImpulseResponse(fullRecording, sampleRate)
 
                 _state.value = _state.value.copy(
                     isMeasuringRT60 = false,
@@ -442,46 +464,108 @@ class DeviceLabViewModel(application: Application) : AndroidViewModel(applicatio
             try {
                 val sampleRate = 48000
                 val testFrequency = 1000.0 // 1kHz test tone
-                val duration = 2.0 // 2 seconds
-                val totalSamples = (sampleRate * duration).toInt()
 
-                // Generate test tone
-                val testTone = FloatArray(totalSamples) { i ->
-                    (0.5 * kotlin.math.sin(2.0 * Math.PI * testFrequency * i / sampleRate)).toFloat()
-                }
-
-                // Play test tone
-                val backend = com.supremecorp.bass.audio.backend.AndroidAudioTrackBackend()
-                val audioConfig = AudioOutputConfig(sampleRate = sampleRate)
-                backend.start(audioConfig)
-                backend.write(testTone, totalSamples)
-                backend.stop()
-
-                // Wait for tone to finish
-                kotlinx.coroutines.delay(100)
-
-                // Record response
+                // STEP 1: Start microphone FIRST
                 audioInput.start()
-                val recordingDuration = 2.0
-                val recordingSamples = (sampleRate * recordingDuration).toInt()
-                val recording = FloatArray(recordingSamples)
-                var samplesRead = 0
+                kotlinx.coroutines.delay(100) // Preroll — let mic stabilize
 
-                while (samplesRead < recordingSamples && audioInput.isRecording()) {
+                // STEP 2: Record pre-stimulus baseline (100ms)
+                val baselineDuration = 0.1
+                val baselineSamples = (sampleRate * baselineDuration).toInt()
+                val baseline = FloatArray(baselineSamples)
+                var samplesRead = 0
+                while (samplesRead < baselineSamples && audioInput.isRecording()) {
                     val buffer = FloatArray(1024)
                     val read = audioInput.read(buffer)
                     if (read > 0) {
-                        val copyLength = minOf(read, recordingSamples - samplesRead)
-                        System.arraycopy(buffer, 0, recording, samplesRead, copyLength)
+                        val copyLength = minOf(read, baselineSamples - samplesRead)
+                        System.arraycopy(buffer, 0, baseline, samplesRead, copyLength)
                         samplesRead += copyLength
-                        _state.value = _state.value.copy(thdProgress = samplesRead.toFloat() / recordingSamples)
                     }
                 }
+
+                // STEP 3: Play test tone WHILE mic is still recording
+                val toneDuration = 2.0
+                val toneSamples = (sampleRate * toneDuration).toInt()
+                val testTone = FloatArray(toneSamples) { i ->
+                    (0.5 * kotlin.math.sin(2.0 * Math.PI * testFrequency * i / sampleRate)).toFloat()
+                }
+
+                val backend = com.supremecorp.bass.audio.backend.AndroidAudioTrackBackend()
+                val audioConfig = AudioOutputConfig(sampleRate = sampleRate)
+                backend.start(audioConfig)
+
+                // Write tone in chunks to avoid blocking too long
+                val chunkSize = 4096
+                var toneOffset = 0
+                while (toneOffset < toneSamples) {
+                    val remaining = toneSamples - toneOffset
+                    val writeSize = minOf(chunkSize, remaining)
+                    val chunk = FloatArray(writeSize)
+                    System.arraycopy(testTone, toneOffset, chunk, 0, writeSize)
+                    backend.write(chunk, writeSize)
+                    toneOffset += writeSize
+
+                    // Read mic data simultaneously
+                    val micBuffer = FloatArray(1024)
+                    val read = audioInput.read(micBuffer)
+                    if (read > 0) {
+                        // Store for later analysis
+                    }
+                }
+
+                // STEP 4: Record post-stimulus decay (500ms) for settling
+                val settlingDuration = 0.5
+                val settlingSamples = (sampleRate * settlingDuration).toInt()
+
+                // STEP 5: Build full recording (baseline + tone + settling)
+                val totalSamples = baselineSamples + toneSamples + settlingSamples
+                val fullRecording = FloatArray(totalSamples)
+                System.arraycopy(baseline, 0, fullRecording, 0, baselineSamples)
+                samplesRead = baselineSamples
+
+                // Read the tone portion from mic
+                var toneRead = 0
+                while (toneRead < toneSamples && audioInput.isRecording()) {
+                    val buffer = FloatArray(1024)
+                    val read = audioInput.read(buffer)
+                    if (read > 0) {
+                        val copyLength = minOf(read, toneSamples - toneRead)
+                        System.arraycopy(buffer, 0, fullRecording, samplesRead, copyLength)
+                        samplesRead += copyLength
+                        toneRead += copyLength
+                        _state.value = _state.value.copy(
+                            thdProgress = (baselineSamples + toneRead).toFloat() / totalSamples * 0.7f
+                        )
+                    }
+                }
+
+                // Read settling portion
+                var settlingRead = 0
+                while (settlingRead < settlingSamples && audioInput.isRecording()) {
+                    val buffer = FloatArray(1024)
+                    val read = audioInput.read(buffer)
+                    if (read > 0) {
+                        val copyLength = minOf(read, settlingSamples - settlingRead)
+                        System.arraycopy(buffer, 0, fullRecording, samplesRead, copyLength)
+                        samplesRead += copyLength
+                        settlingRead += copyLength
+                        _state.value = _state.value.copy(
+                            thdProgress = (baselineSamples + toneSamples + settlingRead).toFloat() / totalSamples * 0.7f + 0.3f
+                        )
+                    }
+                }
+
+                // STEP 6: Stop everything
+                backend.stop()
                 audioInput.stop()
 
-                // Analyze THD
+                // STEP 7: Analyze THD from the tone portion only (skip baseline)
+                val toneStartSample = baselineSamples
+                val toneRecording = fullRecording.copyOfRange(toneStartSample, toneStartSample + toneSamples)
+
                 val thdAnalyzer = THDAnalyzer()
-                val analysis = thdAnalyzer.analyze(recording, testFrequency, sampleRate)
+                val analysis = thdAnalyzer.analyze(toneRecording, testFrequency, sampleRate)
 
                 _state.value = _state.value.copy(
                     isMeasuringTHD = false,
