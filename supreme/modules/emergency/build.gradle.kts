@@ -1,23 +1,29 @@
 plugins {
-    kotlin("jvm") version "1.9.20"
+    id("com.android.library")
+    kotlin("android")
 }
 
-group = "com.supreme"
-version = "1.0-SNAPSHOT"
+android {
+    namespace = "com.supreme.emergency"
+    compileSdk = 35
 
-repositories {
-    mavenCentral()
+    defaultConfig {
+        minSdk = 26
+    }
+
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
 }
 
 dependencies {
+    implementation(project(":core:universal-model"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
-}
-
-tasks.test {
-    useJUnitPlatform()
-}
-
-kotlin {
-    jvmToolchain(17)
 }

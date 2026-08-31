@@ -45,9 +45,28 @@ android {
 }
 
 dependencies {
-    // Core
+    // Supreme modules
+    implementation(project(":core:universal-model"))
+    implementation(project(":core:device-abstraction"))
+    implementation(project(":modules:fix-ai"))
+    implementation(project(":modules:maintenance-os"))
+    implementation(project(":modules:warranty-vault"))
+    implementation(project(":modules:network-doctor"))
+    implementation(project(":modules:noise-doctor"))
+    implementation(project(":modules:vibration-doctor"))
+    implementation(project(":modules:camera-hub"))
+    implementation(project(":modules:find"))
+    implementation(project(":modules:home-hub"))
+    implementation(project(":modules:utilities"))
+    implementation(project(":modules:inventory"))
+    implementation(project(":modules:vehicle-hub"))
+    implementation(project(":modules:leak-watch"))
+    implementation(project(":modules:emergency"))
+
+    // Core Android
     implementation("androidx.core:core-ktx:1.12.0")
     implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.7.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
     implementation("androidx.activity:activity-compose:1.8.2")
 
     // Compose

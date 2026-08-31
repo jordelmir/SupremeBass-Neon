@@ -8,7 +8,11 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import com.supreme.android.ui.fix.FixScreen
+import com.supreme.android.ui.home.AssetsScreen
+import com.supreme.android.ui.home.AssetDetailScreen
 import com.supreme.android.ui.home.HomeScreen
+import com.supreme.android.ui.home.SettingsScreen
+import com.supreme.android.ui.home.ToolsHubScreen
 import com.supreme.android.ui.maintenance.MaintenanceScreen
 import com.supreme.android.ui.network.NetworkScreen
 import com.supreme.android.ui.noise.NoiseScreen

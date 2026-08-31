@@ -10,6 +10,8 @@ repositories {
 }
 
 dependencies {
+    implementation(project(":core:universal-model"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
 }

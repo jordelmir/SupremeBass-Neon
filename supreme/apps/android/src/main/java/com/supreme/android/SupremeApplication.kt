@@ -1,19 +1,14 @@
 package com.supreme.android
 
 import android.app.Application
+import com.supreme.android.di.AppContainer
 
-/**
- * Supreme Application — initializes all modules.
- */
 class SupremeApplication : Application() {
+    lateinit var container: AppContainer
+        private set
 
     override fun onCreate() {
         super.onCreate()
-        instance = this
-    }
-
-    companion object {
-        lateinit var instance: SupremeApplication
-            private set
+        container = AppContainer(this)
     }
 }
