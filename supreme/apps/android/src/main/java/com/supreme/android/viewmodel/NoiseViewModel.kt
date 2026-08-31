@@ -12,7 +12,8 @@ data class NoiseUiState(
     val dominantFrequency: Float = 0f,
     val harmonics: List<Float> = emptyList(),
     val classification: String = "",
-    val suggestions: List<String> = emptyList()
+    val suggestions: List<String> = emptyList(),
+    val error: String? = null
 )
 
 class NoiseViewModel(application: Application) : BaseViewModel(application) {
@@ -20,11 +21,11 @@ class NoiseViewModel(application: Application) : BaseViewModel(application) {
     val uiState: StateFlow<NoiseUiState> = _uiState
 
     fun startRecording() {
-        _uiState.value = _uiState.value.copy(isRecording = true)
+        _uiState.value = _uiState.value.copy(isRecording = true, error = null)
     }
 
     fun stopRecording(audioData: FloatArray) {
-        _uiState.value = _uiState.value.copy(isRecording = false, isAnalyzing = true)
+        _uiState.value = _uiState.value.copy(isRecording = false, isAnalyzing = true, error = null)
         viewModelScope.launch {
             try {
                 val result = container.noiseDoctorEngine.analyze(audioData)
@@ -40,9 +41,13 @@ class NoiseViewModel(application: Application) : BaseViewModel(application) {
                 _uiState.value = NoiseUiState(
                     isRecording = false,
                     isAnalyzing = false,
-                    classification = "Error: ${e.message}"
+                    error = "Analysis failed: ${e.message ?: "Unknown error"}"
                 )
             }
         }
+    }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(error = null)
     }
 }

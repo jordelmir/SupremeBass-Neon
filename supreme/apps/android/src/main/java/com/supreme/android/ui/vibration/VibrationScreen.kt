@@ -1,5 +1,7 @@
 package com.supreme.android.ui.vibration
 
+import android.Manifest
+import android.content.pm.PackageManager
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -7,9 +9,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.supreme.android.permissions.PermissionHelper
+import com.supreme.android.permissions.RequestPermissionEffect
 import com.supreme.android.viewmodel.VibrationViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -19,6 +25,12 @@ fun VibrationScreen(
     viewModel: VibrationViewModel = viewModel()
 ) {
     val uiState by viewModel.uiState.collectAsState()
+    val context = LocalContext.current
+    var hasPermission by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        hasPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.HIGH_SAMPLING_RATE_SENSORS) == PackageManager.PERMISSION_GRANTED
+    }
 
     Column(
         modifier = Modifier
@@ -73,7 +85,6 @@ fun VibrationScreen(
                     Text("Dominant: ${uiState.dominantFrequency.toInt()} Hz", style = MaterialTheme.typography.bodyMedium)
                     Spacer(modifier = Modifier.height(8.dp))
                     Text("Baseline: ${uiState.baselineComparison}", style = MaterialTheme.typography.bodyMedium)
-
                     if (uiState.suggestions.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(12.dp))
                         Text("Recommendations", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)

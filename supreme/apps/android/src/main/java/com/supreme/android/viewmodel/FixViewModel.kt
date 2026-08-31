@@ -2,7 +2,6 @@ package com.supreme.android.viewmodel
 
 import android.app.Application
 import androidx.lifecycle.viewModelScope
-import com.supreme.core.Diagnosis
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -11,7 +10,8 @@ data class FixUiState(
     val isAnalyzing: Boolean = false,
     val diagnosis: String = "",
     val confidence: Float = 0f,
-    val suggestions: List<String> = emptyList()
+    val suggestions: List<String> = emptyList(),
+    val error: String? = null
 )
 
 class FixViewModel(application: Application) : BaseViewModel(application) {
@@ -20,7 +20,7 @@ class FixViewModel(application: Application) : BaseViewModel(application) {
 
     fun analyze(imageData: ByteArray? = null, audioData: ByteArray? = null) {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isAnalyzing = true)
+            _uiState.value = _uiState.value.copy(isAnalyzing = true, error = null)
             try {
                 val result = container.fixAIEngine.diagnoseFromCameraAndAudio(
                     imageBytes = imageData ?: ByteArray(0),
@@ -35,11 +35,13 @@ class FixViewModel(application: Application) : BaseViewModel(application) {
             } catch (e: Exception) {
                 _uiState.value = FixUiState(
                     isAnalyzing = false,
-                    diagnosis = "Error: ${e.message}",
-                    confidence = 0f,
-                    suggestions = emptyList()
+                    error = "Analysis failed: ${e.message ?: "Unknown error"}"
                 )
             }
         }
+    }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(error = null)
     }
 }

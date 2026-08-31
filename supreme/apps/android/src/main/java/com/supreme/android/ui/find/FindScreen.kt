@@ -1,5 +1,7 @@
 package com.supreme.android.ui.find
 
+import android.Manifest
+import android.os.Build
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,6 +13,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import com.supreme.android.permissions.PermissionHelper
+import com.supreme.android.permissions.RequestMultiplePermissionsEffect
 
 data class TrackedObject(
     val name: String,
@@ -21,6 +25,25 @@ data class TrackedObject(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FindScreen(onBack: () -> Unit) {
+    val bluetoothPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+        arrayOf(
+            Manifest.permission.BLUETOOTH_SCAN,
+            Manifest.permission.BLUETOOTH_CONNECT
+        )
+    } else {
+        arrayOf(
+            Manifest.permission.BLUETOOTH,
+            Manifest.permission.ACCESS_FINE_LOCATION
+        )
+    }
+
+    var hasPermissions by remember { mutableStateOf(false) }
+
+    RequestMultiplePermissionsEffect(
+        permissions = bluetoothPermissions,
+        onAllGranted = { hasPermissions = true }
+    )
+
     val objects = listOf(
         TrackedObject("Keys", "2 min ago", "Strong"),
         TrackedObject("Backpack", "15 min ago", "Medium"),
@@ -35,6 +58,16 @@ fun FindScreen(onBack: () -> Unit) {
         Text("Find", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Text("Locate your objects", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(24.dp))
+
+        if (!hasPermissions) {
+            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
+                Column(modifier = Modifier.padding(16.dp)) {
+                    Text("Permission Required", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onErrorContainer)
+                    Text("Bluetooth permission is needed to scan for objects", color = MaterialTheme.colorScheme.onErrorContainer)
+                }
+            }
+            return
+        }
 
         Button(onClick = { /* TODO: Scan for BLE tags */ }, modifier = Modifier.fillMaxWidth()) {
             Icon(Icons.Default.Search, contentDescription = null)

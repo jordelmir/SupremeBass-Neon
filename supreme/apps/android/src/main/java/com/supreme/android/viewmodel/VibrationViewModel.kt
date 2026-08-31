@@ -15,7 +15,8 @@ data class VibrationUiState(
     val totalRMS: Float = 0f,
     val dominantFrequency: Float = 0f,
     val baselineComparison: String = "",
-    val suggestions: List<String> = emptyList()
+    val suggestions: List<String> = emptyList(),
+    val error: String? = null
 )
 
 class VibrationViewModel(application: Application) : BaseViewModel(application) {
@@ -23,11 +24,11 @@ class VibrationViewModel(application: Application) : BaseViewModel(application) 
     val uiState: StateFlow<VibrationUiState> = _uiState
 
     fun startRecording() {
-        _uiState.value = _uiState.value.copy(isRecording = true)
+        _uiState.value = _uiState.value.copy(isRecording = true, error = null)
     }
 
     fun stopRecording(x: FloatArray, y: FloatArray, z: FloatArray) {
-        _uiState.value = _uiState.value.copy(isRecording = false, isAnalyzing = true)
+        _uiState.value = _uiState.value.copy(isRecording = false, isAnalyzing = true, error = null)
         viewModelScope.launch {
             try {
                 val result = container.vibrationDoctorEngine.analyze(x, y, z)
@@ -46,9 +47,13 @@ class VibrationViewModel(application: Application) : BaseViewModel(application) 
                 _uiState.value = VibrationUiState(
                     isRecording = false,
                     isAnalyzing = false,
-                    baselineComparison = "Error: ${e.message}"
+                    error = "Analysis failed: ${e.message ?: "Unknown error"}"
                 )
             }
         }
+    }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(error = null)
     }
 }

@@ -10,7 +10,8 @@ data class NetworkUiState(
     val isDiagnosing: Boolean = false,
     val diagnosis: String = "",
     val checks: List<String> = emptyList(),
-    val recommendations: List<String> = emptyList()
+    val recommendations: List<String> = emptyList(),
+    val error: String? = null
 )
 
 class NetworkViewModel(application: Application) : BaseViewModel(application) {
@@ -19,7 +20,7 @@ class NetworkViewModel(application: Application) : BaseViewModel(application) {
 
     fun diagnose() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isDiagnosing = true)
+            _uiState.value = _uiState.value.copy(isDiagnosing = true, error = null)
             try {
                 val result = container.networkDoctorEngine.diagnose()
                 _uiState.value = NetworkUiState(
@@ -31,9 +32,13 @@ class NetworkViewModel(application: Application) : BaseViewModel(application) {
             } catch (e: Exception) {
                 _uiState.value = NetworkUiState(
                     isDiagnosing = false,
-                    diagnosis = "Error: ${e.message}"
+                    error = "Diagnosis failed: ${e.message ?: "Unknown error"}"
                 )
             }
         }
+    }
+
+    fun clearError() {
+        _uiState.value = _uiState.value.copy(error = null)
     }
 }
