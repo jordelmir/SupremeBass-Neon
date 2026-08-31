@@ -31,7 +31,7 @@ class AppContainer(context: Context) {
     val findEngine = FindEngine()
     val cameraHubEngine = CameraHubEngine()
     val leakWatchEngine = LeakWatchEngine()
-    val emergencyEngine = EmergencyEngine()
+    val emergencyEngine = EmergencyEngine(context)
     val vehicleHubEngine = VehicleHubEngine()
     val utilitiesEngine = UtilitiesEngine()
 

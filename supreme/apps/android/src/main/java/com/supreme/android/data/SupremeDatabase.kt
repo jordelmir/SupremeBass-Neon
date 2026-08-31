@@ -1,8 +1,17 @@
 package com.supreme.android.data
 
 import android.content.Context
-import androidx.room.*
-import com.supreme.core.*
+import androidx.room.Room as AndroidRoom
+import androidx.room.RoomDatabase
+import androidx.room.Database
+import androidx.room.Dao
+import androidx.room.Entity
+import androidx.room.PrimaryKey
+import androidx.room.Insert
+import androidx.room.OnConflictStrategy
+import androidx.room.Update
+import androidx.room.Delete
+import androidx.room.Query
 import java.time.Instant
 
 /**
@@ -263,7 +272,7 @@ abstract class SupremeDatabase : RoomDatabase() {
 
         fun getDatabase(context: Context): SupremeDatabase {
             return INSTANCE ?: synchronized(this) {
-                val instance = Room.databaseBuilder(
+                val instance = AndroidRoom.databaseBuilder(
                     context.applicationContext,
                     SupremeDatabase::class.java,
                     "supreme_database"

@@ -26,11 +26,12 @@ class FixViewModel(application: Application) : BaseViewModel(application) {
                     imageBytes = imageData ?: ByteArray(0),
                     audioBytes = audioData ?: ByteArray(0)
                 )
+                val topCause = result.mostLikelyCauses.firstOrNull()
                 _uiState.value = FixUiState(
                     isAnalyzing = false,
-                    diagnosis = result.mostLikelyCause.description,
-                    confidence = result.mostLikelyCause.confidence.toFloat(),
-                    suggestions = result.checks.map { it.description }
+                    diagnosis = topCause?.name ?: "No diagnosis available",
+                    confidence = topCause?.probability?.toFloat() ?: 0f,
+                    suggestions = result.checks.map { it.name }
                 )
             } catch (e: Exception) {
                 _uiState.value = FixUiState(
