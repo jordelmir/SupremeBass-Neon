@@ -112,16 +112,13 @@ class FlirA70Adapter(
 
     /**
      * Connect to the FLIR A70.
+     * NOT_IMPLEMENTED: Returns false until real RTSP/REST/MQTT connection is built.
      */
     suspend fun connect(): Boolean {
-        return try {
-            // TODO: Establish RTSP, REST, MQTT connections
-            connected = true
-            true
-        } catch (e: Exception) {
-            connected = false
-            false
-        }
+        // NOT_IMPLEMENTED: No real network connection to FLIR A70
+        // When implemented: establish RTSP, REST, MQTT connections
+        connected = false
+        return false
     }
 
     /**

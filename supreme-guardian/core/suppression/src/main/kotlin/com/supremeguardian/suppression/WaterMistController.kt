@@ -286,6 +286,7 @@ interface MistHardwareInterface {
 
 /**
  * PLC-based hardware interface.
+ * NOT_IMPLEMENTED: All methods return false/unknown until real PLC connected.
  */
 class PLCHardwareInterface(
     private val plcAddress: String,
@@ -293,80 +294,81 @@ class PLCHardwareInterface(
 ) : MistHardwareInterface {
 
     override suspend fun activateMist(zoneId: String): Boolean {
-        // TODO: Send Modbus command to PLC
-        return true
+        // NOT_IMPLEMENTED: No Modbus TCP connection to PLC
+        return false
     }
 
     override suspend fun deactivateMist(zoneId: String): Boolean {
-        // TODO: Send Modbus command to PLC
-        return true
+        // NOT_IMPLEMENTED: No Modbus TCP connection to PLC
+        return false
     }
 
     override suspend fun emergencyStop(): Boolean {
-        // TODO: Send emergency stop command to PLC
-        return true
+        // NOT_IMPLEMENTED: No Modbus TCP connection to PLC
+        return false
     }
 
     override suspend fun readPressure(): Double {
-        // TODO: Read pressure from PLC
-        return 3.5
+        // NOT_IMPLEMENTED: No pressure sensor connected
+        return 0.0
     }
 
     override suspend fun readFlowRate(): Double {
-        // TODO: Read flow rate from PLC
-        return 8.0
+        // NOT_IMPLEMENTED: No flow sensor connected
+        return 0.0
     }
 
     override suspend fun readTemperature(): Double {
-        // TODO: Read temperature from PLC
-        return 75.0
+        // NOT_IMPLEMENTED: No temperature sensor connected
+        return 0.0
     }
 
     override suspend fun isValveOpen(): Boolean {
-        // TODO: Read valve state from PLC
+        // NOT_IMPLEMENTED: No valve position sensor connected
         return false
     }
 }
 
 /**
  * Relay-based hardware interface.
+ * NOT_IMPLEMENTED: All methods return false/unknown until real relay board connected.
  */
 class RelayHardwareInterface(
     private val relayBoardAddress: String
 ) : MistHardwareInterface {
 
     override suspend fun activateMist(zoneId: String): Boolean {
-        // TODO: Send command to relay board
-        return true
+        // NOT_IMPLEMENTED: No relay board connection
+        return false
     }
 
     override suspend fun deactivateMist(zoneId: String): Boolean {
-        // TODO: Send command to relay board
-        return true
+        // NOT_IMPLEMENTED: No relay board connection
+        return false
     }
 
     override suspend fun emergencyStop(): Boolean {
-        // TODO: Send emergency stop to relay board
-        return true
+        // NOT_IMPLEMENTED: No relay board connection
+        return false
     }
 
     override suspend fun readPressure(): Double {
-        // TODO: Read pressure from sensor
-        return 3.5
+        // NOT_IMPLEMENTED: No pressure sensor connected
+        return 0.0
     }
 
     override suspend fun readFlowRate(): Double {
-        // TODO: Read flow rate from sensor
-        return 8.0
+        // NOT_IMPLEMENTED: No flow sensor connected
+        return 0.0
     }
 
     override suspend fun readTemperature(): Double {
-        // TODO: Read temperature from sensor
-        return 75.0
+        // NOT_IMPLEMENTED: No temperature sensor connected
+        return 0.0
     }
 
     override suspend fun isValveOpen(): Boolean {
-        // TODO: Read valve state
+        // NOT_IMPLEMENTED: No valve position sensor connected
         return false
     }
 }

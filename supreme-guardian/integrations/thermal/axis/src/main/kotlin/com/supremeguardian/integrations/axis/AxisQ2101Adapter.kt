@@ -128,16 +128,13 @@ class AxisQ2101Adapter(
 
     /**
      * Connect to the AXIS Q2101-TE.
+     * NOT_IMPLEMENTED: Returns false until real ONVIF/VAPIX/MQTT connection is built.
      */
     suspend fun connect(): Boolean {
-        return try {
-            // TODO: Establish ONVIF, VAPIX, MQTT connections
-            connected = true
-            true
-        } catch (e: Exception) {
-            connected = false
-            false
-        }
+        // NOT_IMPLEMENTED: No real network connection to AXIS Q2101-TE
+        // When implemented: establish ONVIF, VAPIX, MQTT connections
+        connected = false
+        return false
     }
 
     /**

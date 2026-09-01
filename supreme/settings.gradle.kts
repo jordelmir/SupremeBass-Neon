@@ -18,6 +18,7 @@ rootProject.name = "supreme"
 
 include(":core:universal-model")
 include(":core:device-abstraction")
+include(":core:truth")
 
 include(":modules:fix-ai")
 include(":modules:maintenance-os")
