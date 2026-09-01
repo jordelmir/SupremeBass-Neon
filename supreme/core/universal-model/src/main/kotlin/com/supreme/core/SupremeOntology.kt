@@ -623,8 +623,16 @@ data class Cause(
     val name: String,
     val probability: Double,
     val explanation: String,
-    val evidence: List<String> = emptyList()
+    val evidence: List<String> = emptyList(),
+    val source: CauseSource = CauseSource.HEURISTIC
 )
+
+enum class CauseSource {
+    HEURISTIC,       // Category-based estimate, NOT measured
+    MEASURED,        // Derived from actual sensor data
+    ML_MODEL,        // Derived from trained model
+    USER_REPORTED    // Provided by user
+}
 
 data class DiagnosticCheck(
     val name: String,

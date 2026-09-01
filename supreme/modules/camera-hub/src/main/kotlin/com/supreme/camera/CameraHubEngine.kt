@@ -47,6 +47,7 @@ class CameraHubEngine {
 
     /**
      * Analyze a camera frame for events.
+     * Returns NOT_IMPLEMENTED until real CV pipeline is connected.
      */
     suspend fun analyzeFrame(
         cameraId: String,
@@ -59,21 +60,12 @@ class CameraHubEngine {
             error = "Camera not found"
         )
 
-        // TODO: Use CV pipeline to analyze frame
-        val events = mutableListOf<CameraEvent>()
-
-        // Placeholder: detect motion
-        events.add(CameraEvent.MotionDetected(
-            cameraId = cameraId,
-            timestamp = Instant.now(),
-            confidence = 0.85,
-            zone = camera.zone
-        ))
-
+        // NOT_IMPLEMENTED: No CV pipeline connected
         return CameraAnalysisResult(
             cameraId = cameraId,
             timestamp = Instant.now(),
-            events = events
+            events = emptyList(),
+            error = "NOT_IMPLEMENTED: No CV pipeline connected"
         )
     }
 }

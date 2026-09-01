@@ -89,49 +89,30 @@ class EmergencyEngine(private val context: Context) {
 
     /**
      * Get emergency information card.
+     * Returns UNCONFIGURED state — user must fill in their own data.
      */
     fun getMedicalInfoCard(): MedicalInfoCard {
-        // TODO: Load from user settings
         return MedicalInfoCard(
-            name = "User Name",
-            bloodType = "O+",
-            allergies = "None",
-            medications = "None",
-            conditions = "None",
-            emergencyContact1 = EmergencyContact("Contact 1", "8888-8888", "Spouse"),
-            emergencyContact2 = EmergencyContact("Contact 2", "8888-8889", "Parent"),
-            doctorName = "Dr. Smith",
-            doctorPhone = "8888-8890",
-            insuranceProvider = "Health Insurance",
-            insurancePolicy = "POL-12345"
+            name = "",
+            bloodType = "",
+            allergies = "",
+            medications = "",
+            conditions = "",
+            emergencyContact1 = null,
+            emergencyContact2 = null,
+            doctorName = "",
+            doctorPhone = "",
+            insuranceProvider = "",
+            insurancePolicy = ""
         )
     }
 
     /**
      * Get home emergency shutoffs.
+     * Returns empty list — user must configure their own shutoff locations.
      */
     fun getHomeShutoffs(): List<EmergencyShutoff> {
-        // TODO: Load from user settings
-        return listOf(
-            EmergencyShutoff(
-                name = "Main Water Valve",
-                location = "Under kitchen sink",
-                instructions = "Turn clockwise to close",
-                photoPath = null
-            ),
-            EmergencyShutoff(
-                name = "Electrical Panel",
-                location = "Garage, south wall",
-                instructions = "Flip main breaker to OFF",
-                photoPath = null
-            ),
-            EmergencyShutoff(
-                name = "Gas Valve",
-                location = "Outside, near meter",
-                instructions = "Turn handle perpendicular to pipe",
-                photoPath = null
-            )
-        )
+        return emptyList()
     }
 
     /**
@@ -188,23 +169,10 @@ class EmergencyEngine(private val context: Context) {
 
     /**
      * Get family meeting points.
+     * Returns empty list — user must configure their own meeting points.
      */
     fun getMeetingPoints(): List<MeetingPoint> {
-        // TODO: Load from user settings
-        return listOf(
-            MeetingPoint(
-                name = "Front Yard",
-                description = "Near the mailbox",
-                latitude = 0.0,
-                longitude = 0.0
-            ),
-            MeetingPoint(
-                name = "Neighbor's House",
-                description = "234 Main Street",
-                latitude = 0.0,
-                longitude = 0.0
-            )
-        )
+        return emptyList()
     }
 }
 
@@ -218,13 +186,15 @@ data class MedicalInfoCard(
     val allergies: String,
     val medications: String,
     val conditions: String,
-    val emergencyContact1: EmergencyContact,
+    val emergencyContact1: EmergencyContact?,
     val emergencyContact2: EmergencyContact?,
     val doctorName: String,
     val doctorPhone: String,
     val insuranceProvider: String,
     val insurancePolicy: String
-)
+) {
+    val isConfigured: Boolean get() = name.isNotBlank() && emergencyContact1 != null
+}
 
 data class EmergencyContact(
     val name: String,

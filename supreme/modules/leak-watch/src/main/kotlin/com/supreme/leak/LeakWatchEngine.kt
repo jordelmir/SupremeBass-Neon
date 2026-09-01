@@ -100,22 +100,13 @@ class LeakWatchEngine {
 
     /**
      * Open a valve.
+     * Returns failure until real hardware is connected.
      */
     suspend fun openValve(valveId: String): ShutoffResult {
         val valve = valves[valveId] ?: return ShutoffResult(false, "Valve not found")
 
-        val commandSent = sendValveCommand(valveId, true)
-        if (!commandSent) {
-            return ShutoffResult(false, "Failed to send command")
-        }
-
-        valves[valveId] = valve.copy(
-            isOpen = true,
-            lastAction = Instant.now(),
-            lastActionType = ValveActionType.OPEN
-        )
-        updateState()
-        return ShutoffResult(true, "Valve opened")
+        // NOT_IMPLEMENTED: No real valve hardware connected
+        return ShutoffResult(false, "NOT_IMPLEMENTED: No valve hardware connected")
     }
 
     /**
@@ -158,8 +149,9 @@ class LeakWatchEngine {
     }
 
     private fun sendValveCommand(valveId: String, open: Boolean): Boolean {
-        // TODO: Send command via BLE/Matter/Relay
-        return true
+        // NOT_IMPLEMENTED: No real valve hardware connected
+        // Returns false to indicate command was NOT sent
+        return false
     }
 
     private fun verifyFlowReduction(zone: String): Boolean {

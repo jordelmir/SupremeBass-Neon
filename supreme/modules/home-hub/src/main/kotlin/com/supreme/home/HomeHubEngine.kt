@@ -172,6 +172,7 @@ class HomeHubEngine {
 
     /**
      * Get energy consumption summary.
+     * Cost estimate is UNKNOWN until user configures their electricity rate.
      */
     fun getEnergySummary(): EnergySummary {
         val activeDevices = devices.values.filter { it.isOn }
@@ -180,8 +181,8 @@ class HomeHubEngine {
         return EnergySummary(
             activeDevices = activeDevices.size,
             totalWatts = totalWatts,
-            estimatedDailyKwh = totalWatts * 24 / 1000,
-            monthlyCostEstimate = totalWatts * 24 * 30 / 1000 * 0.15 // Placeholder rate
+            estimatedDailyKwh = if (totalWatts > 0) totalWatts * 24 / 1000 else 0.0,
+            monthlyCostEstimate = null // UNKNOWN: User must configure electricity rate
         )
     }
 
@@ -304,7 +305,7 @@ data class EnergySummary(
     val activeDevices: Int,
     val totalWatts: Double,
     val estimatedDailyKwh: Double,
-    val monthlyCostEstimate: Double
+    val monthlyCostEstimate: Double? = null
 )
 
 sealed class CommandResult {

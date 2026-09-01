@@ -23,11 +23,14 @@ import java.util.concurrent.atomic.AtomicBoolean
  *   - RECORD_AUDIO permission
  *   - AudioRecord API (not MediaRecorder — need raw PCM)
  */
-class AudioInputProcessor(private val context: Context) {
+class AudioInputProcessor(
+    private val context: Context,
+    private val sampleRate: Int = SAMPLE_RATE
+) {
 
     companion object {
         private const val TAG = "AudioInputProcessor"
-        private const val SAMPLE_RATE = 44100
+        const val SAMPLE_RATE = 48_000
         private const val CHANNEL_CONFIG = AudioFormat.CHANNEL_IN_MONO
         private const val AUDIO_FORMAT = AudioFormat.ENCODING_PCM_FLOAT
     }
@@ -47,7 +50,7 @@ class AudioInputProcessor(private val context: Context) {
         ) == PackageManager.PERMISSION_GRANTED
     }
 
-    fun getSampleRate(): Int = SAMPLE_RATE
+    fun getSampleRate(): Int = sampleRate
 
     fun start(): Boolean {
         if (isRecording.get()) {
@@ -62,7 +65,7 @@ class AudioInputProcessor(private val context: Context) {
 
         return try {
             val minBufferSize = AudioRecord.getMinBufferSize(
-                SAMPLE_RATE, CHANNEL_CONFIG, AUDIO_FORMAT
+                sampleRate, CHANNEL_CONFIG, AUDIO_FORMAT
             )
 
             if (minBufferSize == AudioRecord.ERROR || minBufferSize == AudioRecord.ERROR_BAD_VALUE) {
@@ -76,7 +79,7 @@ class AudioInputProcessor(private val context: Context) {
                 .setAudioSource(MediaRecorder.AudioSource.MIC)
                 .setAudioFormat(
                     AudioFormat.Builder()
-                        .setSampleRate(SAMPLE_RATE)
+                        .setSampleRate(sampleRate)
                         .setChannelMask(CHANNEL_CONFIG)
                         .setEncoding(AUDIO_FORMAT)
                         .build()
@@ -94,7 +97,7 @@ class AudioInputProcessor(private val context: Context) {
             audioRecord?.startRecording()
             isRecording.set(true)
 
-            AppLogger.i(TAG, "Started: ${SAMPLE_RATE}Hz, buffer=${bufferSize}bytes")
+            AppLogger.i(TAG, "Started: ${sampleRate}Hz, buffer=${bufferSize}bytes")
             true
         } catch (e: SecurityException) {
             Log.e(TAG, "Security exception: ${e.message}")

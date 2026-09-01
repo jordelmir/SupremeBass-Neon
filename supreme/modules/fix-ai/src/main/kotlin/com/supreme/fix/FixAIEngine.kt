@@ -13,10 +13,10 @@ import java.time.Instant
  *
  * Reuses SupremeBass DSP (FFT, harmonics, spectral analysis)
  * and CV pipeline (edge detection, object recognition).
- */
-
-/**
- * The Fix AI engine.
+ *
+ * CURRENT STATUS: HEURISTIC-ONLY — no ML model loaded.
+ * All probability values are category-based heuristics, NOT measured confidence.
+ * Labels are UNVERIFIED until real sensor integration is implemented.
  */
 class FixAIEngine {
 
@@ -197,81 +197,58 @@ class FixAIEngine {
     // ─────────────────────────────────────────────────────────────
 
     private fun rankCauses(analysis: CombinedAnalysis, category: AssetCategory?): List<Cause> {
-        // TODO: Implement cause ranking based on:
-        // 1. Detected anomalies
-        // 2. Asset category knowledge base
-        // 3. Frequency patterns
-        // 4. Historical diagnoses
-        // 5. ML model (future)
-
+        // HEURISTIC ONLY — no ML model loaded
+        // All probabilities are category-based estimates, NOT measured
         val causes = mutableListOf<Cause>()
 
-        // Placeholder causes based on common issues
         when (category) {
             AssetCategory.APPLIANCE -> {
-                causes.add(Cause("Motor/bearing wear", 0.35, "Abnormal rotational noise detected"))
-                causes.add(Cause("Electrical issue", 0.25, "Irregular electrical pattern"))
-                causes.add(Cause("Mechanical imbalance", 0.20, "Vibration pattern suggests imbalance"))
-                causes.add(Cause("Normal wear", 0.15, "Within expected range for age"))
-                causes.add(Cause("Other", 0.05, "Insufficient data for specific diagnosis"))
+                causes.add(Cause("Motor/bearing wear", 0.0, "HEURISTIC: Common for appliances — needs audio measurement", source = CauseSource.HEURISTIC))
+                causes.add(Cause("Electrical issue", 0.0, "HEURISTIC: Common for appliances — needs measurement", source = CauseSource.HEURISTIC))
+                causes.add(Cause("Mechanical imbalance", 0.0, "HEURISTIC: Common for appliances — needs vibration data", source = CauseSource.HEURISTIC))
             }
             AssetCategory.VEHICLE -> {
-                causes.add(Cause("Engine issue", 0.30, "Abnormal engine noise"))
-                causes.add(Cause("Belt wear", 0.25, "Squealing/grinding pattern"))
-                causes.add(Cause("Fluid leak", 0.20, "Puddle detected"))
-                causes.add(Cause("Exhaust issue", 0.15, "Unusual exhaust sound"))
-                causes.add(Cause("Other", 0.10, "Need more information"))
+                causes.add(Cause("Engine issue", 0.0, "HEURISTIC: Common for vehicles — needs OBD2 data", source = CauseSource.HEURISTIC))
+                causes.add(Cause("Belt wear", 0.0, "HEURISTIC: Common for vehicles — needs audio analysis", source = CauseSource.HEURISTIC))
             }
             else -> {
-                causes.add(Cause("Mechanical wear", 0.30, "General wear pattern"))
-                causes.add(Cause("Electrical issue", 0.25, "Irregular pattern"))
-                causes.add(Cause("Normal operation", 0.20, "Within expected range"))
-                causes.add(Cause("Other", 0.25, "Insufficient data"))
+                causes.add(Cause("NEEDS_MORE_DATA", 0.0, "No sensor data available — provide audio, image, or vibration input", source = CauseSource.HEURISTIC))
             }
         }
 
-        return causes.sortedByDescending { it.probability }
+        return causes
     }
 
     private fun rankCauses(analysis: AudioAnalysis, category: AssetCategory?): List<Cause> {
+        // HEURISTIC ONLY — no real audio analysis implemented
         val causes = mutableListOf<Cause>()
 
         when (category) {
             AssetCategory.APPLIANCE -> {
-                causes.add(Cause("Bearing wear", 0.40, "Dominant frequency suggests bearing issue"))
-                causes.add(Cause("Motor imbalance", 0.25, "Harmonic pattern"))
-                causes.add(Cause("Loose component", 0.20, "Rattling pattern"))
-                causes.add(Cause("Normal operation", 0.10, "Within normal range"))
-                causes.add(Cause("Other", 0.05, "Insufficient data"))
+                causes.add(Cause("NEEDS_AUDIO_ANALYSIS", 0.0, "Audio analysis not implemented — placeholder data only", source = CauseSource.HEURISTIC))
             }
             else -> {
-                causes.add(Cause("Mechanical issue", 0.35, "Abnormal frequency pattern"))
-                causes.add(Cause("Normal operation", 0.25, "Within expected range"))
-                causes.add(Cause("Other", 0.40, "Need more information"))
+                causes.add(Cause("NEEDS_MORE_DATA", 0.0, "No audio analysis available", source = CauseSource.HEURISTIC))
             }
         }
 
-        return causes.sortedByDescending { it.probability }
+        return causes
     }
 
     private fun rankCauses(analysis: VibrationAnalysis, category: AssetCategory?): List<Cause> {
+        // HEURISTIC ONLY — no real vibration analysis implemented
         val causes = mutableListOf<Cause>()
 
         when (category) {
             AssetCategory.APPLIANCE -> {
-                causes.add(Cause("Imbalance", 0.40, "High RMS vibration"))
-                causes.add(Cause("Bearing wear", 0.30, "High frequency components"))
-                causes.add(Cause("Loose mounting", 0.20, "Low frequency oscillation"))
-                causes.add(Cause("Normal", 0.10, "Within tolerance"))
+                causes.add(Cause("NEEDS_VIBRATION_ANALYSIS", 0.0, "Vibration analysis not implemented — placeholder data only", source = CauseSource.HEURISTIC))
             }
             else -> {
-                causes.add(Cause("Mechanical issue", 0.35, "Abnormal vibration"))
-                causes.add(Cause("Normal", 0.25, "Within range"))
-                causes.add(Cause("Other", 0.40, "Need more data"))
+                causes.add(Cause("NEEDS_MORE_DATA", 0.0, "No vibration analysis available", source = CauseSource.HEURISTIC))
             }
         }
 
-        return causes.sortedByDescending { it.probability }
+        return causes
     }
 
     // ─────────────────────────────────────────────────────────────
@@ -279,32 +256,22 @@ class FixAIEngine {
     // ─────────────────────────────────────────────────────────────
 
     private fun generateChecks(analysis: CombinedAnalysis, category: AssetCategory?): List<DiagnosticCheck> {
-        val checks = mutableListOf<DiagnosticCheck>()
-
-        // Visual checks
-        checks.add(DiagnosticCheck("Visual inspection", CheckStatus.PASSED, "No obvious damage"))
-        checks.add(DiagnosticCheck("Component integrity", CheckStatus.PASSED, "All parts present"))
-
-        // Audio checks
-        checks.add(DiagnosticCheck("Motor operation", CheckStatus.PASSED, "Motor running"))
-        checks.add(DiagnosticCheck("Abnormal noise", CheckStatus.WARNING, "Periodic noise detected"))
-
-        return checks
+        return listOf(
+            DiagnosticCheck("Visual inspection", CheckStatus.UNKNOWN, "NOT_IMPLEMENTED: No CV pipeline connected"),
+            DiagnosticCheck("Audio analysis", CheckStatus.UNKNOWN, "NOT_IMPLEMENTED: No DSP pipeline connected"),
+            DiagnosticCheck("Motor operation", CheckStatus.UNKNOWN, "NOT_MEASURED: Needs real sensor input")
+        )
     }
 
     private fun generateChecks(analysis: AudioAnalysis, category: AssetCategory?): List<DiagnosticCheck> {
         return listOf(
-            DiagnosticCheck("Motor running", CheckStatus.PASSED, "Motor operation confirmed"),
-            DiagnosticCheck("Abnormal periodic noise", CheckStatus.WARNING, "Periodic pattern detected"),
-            DiagnosticCheck("RPM stability", CheckStatus.PASSED, "RPM within normal range")
+            DiagnosticCheck("Audio analysis", CheckStatus.UNKNOWN, "NOT_IMPLEMENTED: No DSP pipeline connected")
         )
     }
 
     private fun generateChecks(analysis: VibrationAnalysis, category: AssetCategory?): List<DiagnosticCheck> {
         return listOf(
-            DiagnosticCheck("Vibration level", CheckStatus.WARNING, "Above baseline"),
-            DiagnosticCheck("Frequency stability", CheckStatus.PASSED, "Dominant frequency stable"),
-            DiagnosticCheck("Harmonic content", CheckStatus.PASSED, "Expected harmonics")
+            DiagnosticCheck("Vibration analysis", CheckStatus.UNKNOWN, "NOT_IMPLEMENTED: No vibration pipeline connected")
         )
     }
 
@@ -349,15 +316,9 @@ class FixAIEngine {
         causes: List<Cause>,
         checks: List<DiagnosticCheck>
     ): Double {
-        if (causes.isEmpty()) return 0.0
-
-        val topCauseConfidence = causes.first().probability
-        val checksPassed = checks.count { it.status == CheckStatus.PASSED }
-        val checksTotal = checks.size
-
-        val checkFactor = if (checksTotal > 0) checksPassed.toDouble() / checksTotal else 0.5
-
-        return (topCauseConfidence * 0.6 + checkFactor * 0.4).coerceIn(0.0, 1.0)
+        // Returns 0.0 until real analysis is implemented
+        // No fake confidence allowed
+        return 0.0
     }
 }
 

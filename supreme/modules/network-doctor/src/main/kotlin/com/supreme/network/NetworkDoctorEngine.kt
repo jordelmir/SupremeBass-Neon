@@ -114,162 +114,87 @@ class NetworkDoctorEngine {
 
     private suspend fun checkWiFiSignal(): NetworkCheck {
         // TODO: Use Android WifiManager to get RSSI
-        val rssi = -55 // Placeholder: dBm
-        val status = when {
-            rssi >= -50 -> CheckStatus.PASSED
-            rssi >= -60 -> CheckStatus.WARNING
-            else -> CheckStatus.FAILED
-        }
         return NetworkCheck(
             name = "Wi-Fi Signal",
-            status = status,
-            value = rssi.toDouble(),
+            status = CheckStatus.UNKNOWN,
+            value = null,
             unit = "dBm",
-            detail = when (status) {
-                CheckStatus.PASSED -> "Excellent signal"
-                CheckStatus.WARNING -> "Weak signal — may cause slow speeds"
-                CheckStatus.FAILED -> "Very weak signal — likely cause of issues"
-                CheckStatus.UNKNOWN -> "Unknown"
-            },
-            recommendation = if (status != CheckStatus.PASSED) {
-                "Move closer to router or add mesh node"
-            } else null
+            detail = "NOT_MEASURED: No hardware integration yet"
         )
     }
 
     private suspend fun checkLinkSpeed(): NetworkCheck {
         // TODO: Use WifiManager to get link speed
-        val linkSpeed = 433 // Placeholder: Mbps
-        val status = when {
-            linkSpeed >= 300 -> CheckStatus.PASSED
-            linkSpeed >= 100 -> CheckStatus.WARNING
-            else -> CheckStatus.FAILED
-        }
         return NetworkCheck(
             name = "Link Speed",
-            status = status,
-            value = linkSpeed.toDouble(),
+            status = CheckStatus.UNKNOWN,
+            value = null,
             unit = "Mbps",
-            detail = when (status) {
-                CheckStatus.PASSED -> "Good link speed"
-                CheckStatus.WARNING -> "Moderate link speed"
-                CheckStatus.FAILED -> "Slow link speed"
-                CheckStatus.UNKNOWN -> "Unknown"
-            }
+            detail = "NOT_MEASURED: No hardware integration yet"
         )
     }
 
     private suspend fun checkLatency(): NetworkCheck {
         // TODO: Ping gateway and internet servers
-        val latencyMs = 45.0 // Placeholder
-        val status = when {
-            latencyMs <= 20 -> CheckStatus.PASSED
-            latencyMs <= 50 -> CheckStatus.WARNING
-            else -> CheckStatus.FAILED
-        }
         return NetworkCheck(
             name = "Latency",
-            status = status,
-            value = latencyMs,
+            status = CheckStatus.UNKNOWN,
+            value = null,
             unit = "ms",
-            detail = when (status) {
-                CheckStatus.PASSED -> "Low latency — good for real-time apps"
-                CheckStatus.WARNING -> "Moderate latency"
-                CheckStatus.FAILED -> "High latency — may cause lag"
-                CheckStatus.UNKNOWN -> "Unknown"
-            }
+            detail = "NOT_MEASURED: No network ping implementation yet"
         )
     }
 
     private suspend fun checkDNS(): NetworkCheck {
         // TODO: Test DNS resolution speed
-        val dnsMs = 25.0 // Placeholder
-        val status = when {
-            dnsMs <= 15 -> CheckStatus.PASSED
-            dnsMs <= 50 -> CheckStatus.WARNING
-            else -> CheckStatus.FAILED
-        }
         return NetworkCheck(
             name = "DNS Resolution",
-            status = status,
-            value = dnsMs,
+            status = CheckStatus.UNKNOWN,
+            value = null,
             unit = "ms",
-            detail = when (status) {
-                CheckStatus.PASSED -> "Fast DNS resolution"
-                CheckStatus.WARNING -> "Slow DNS — try different DNS server"
-                CheckStatus.FAILED -> "DNS resolution failing"
-                CheckStatus.UNKNOWN -> "Unknown"
-            },
-            recommendation = if (status != CheckStatus.PASSED) {
-                "Try Google DNS (8.8.8.8) or Cloudflare (1.1.1.1)"
-            } else null
+            detail = "NOT_MEASURED: No DNS test implementation yet"
         )
     }
 
     private suspend fun checkPacketLoss(): NetworkCheck {
         // TODO: Send test packets
-        val lossPercent = 0.0 // Placeholder
-        val status = when {
-            lossPercent == 0.0 -> CheckStatus.PASSED
-            lossPercent <= 2.0 -> CheckStatus.WARNING
-            else -> CheckStatus.FAILED
-        }
         return NetworkCheck(
             name = "Packet Loss",
-            status = status,
-            value = lossPercent,
+            status = CheckStatus.UNKNOWN,
+            value = null,
             unit = "%",
-            detail = when (status) {
-                CheckStatus.PASSED -> "No packet loss"
-                CheckStatus.WARNING -> "Some packet loss — may cause buffering"
-                CheckStatus.FAILED -> "Significant packet loss"
-                CheckStatus.UNKNOWN -> "Unknown"
-            }
+            detail = "NOT_MEASURED: No packet loss test implementation yet"
         )
     }
 
     private suspend fun checkGateway(): NetworkCheck {
         // TODO: Ping gateway
-        val reachable = true // Placeholder
-        val latencyMs = 5.0
         return NetworkCheck(
             name = "Gateway",
-            status = if (reachable) CheckStatus.PASSED else CheckStatus.FAILED,
-            value = latencyMs,
+            status = CheckStatus.UNKNOWN,
+            value = null,
             unit = "ms",
-            detail = if (reachable) "Gateway reachable" else "Gateway unreachable"
+            detail = "NOT_MEASURED: No gateway ping implementation yet"
         )
     }
 
     private suspend fun checkInternet(): NetworkCheck {
         // TODO: Test internet connectivity
-        val connected = true // Placeholder
-        val speedMbps = 25.0
         return NetworkCheck(
             name = "Internet",
-            status = if (connected) CheckStatus.PASSED else CheckStatus.FAILED,
-            value = speedMbps,
+            status = CheckStatus.UNKNOWN,
+            value = null,
             unit = "Mbps",
-            detail = if (connected) "Internet connection active" else "No internet connection"
+            detail = "NOT_MEASURED: No internet connectivity test implementation yet"
         )
     }
 
     private suspend fun checkBand(): NetworkCheck {
         // TODO: Detect Wi-Fi band
-        val band = "5 GHz" // Placeholder
-        val status = when (band) {
-            "6 GHz" -> CheckStatus.PASSED
-            "5 GHz" -> CheckStatus.PASSED
-            "2.4 GHz" -> CheckStatus.WARNING
-            else -> CheckStatus.UNKNOWN
-        }
         return NetworkCheck(
             name = "Wi-Fi Band",
-            status = status,
-            detail = "Connected on $band",
-            recommendation = if (band == "2.4 GHz") {
-                "Switch to 5 GHz for faster speeds"
-            } else null
+            status = CheckStatus.UNKNOWN,
+            detail = "NOT_MEASURED: No Wi-Fi band detection implementation yet"
         )
     }
 

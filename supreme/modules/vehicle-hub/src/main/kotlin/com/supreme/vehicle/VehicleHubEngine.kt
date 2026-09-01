@@ -51,51 +51,42 @@ class VehicleHubEngine {
     }
 
     /**
-     * Read live data.
+     * Read live data from OBD2 adapter.
+     * Returns null if not connected or adapter not present.
      */
     suspend fun readLiveData(vehicleId: String): LiveData? {
         val vehicle = vehicles[vehicleId] ?: return null
         if (!vehicle.connected) return null
 
-        // TODO: Read from OBD2
-        val data = LiveData(
-            timestamp = Instant.now(),
-            rpm = 850,
-            speedKmh = 0,
-            engineTempC = 92,
-            fuelLevelPercent = 75.0,
-            batteryVoltage = 14.2,
-            intakeAirTempC = 28,
-            mafGps = 3.2,
-            throttlePercent = 12.0,
-            fuelRateLph = 0.8
-        )
-        _liveData.value = data
-        return data
+        // TODO: Actually read from ELM327 via BLE/WiFi
+        // NOT_IMPLEMENTED: No real OBD2 adapter connected
+        return null
     }
 
     /**
-     * Read diagnostic trouble codes.
+     * Read diagnostic trouble codes from OBD2 adapter.
+     * Returns empty list if not connected or adapter not present.
      */
     suspend fun readDTCs(vehicleId: String): List<DiagnosticCode> {
-        // TODO: Read from OBD2
-        return listOf(
-            DiagnosticCode(
-                code = "P0301",
-                description = "Cylinder 1 Misfire Detected",
-                severity = Severity.MEDIUM,
-                system = "Engine",
-                timestamp = Instant.now()
-            )
-        )
+        val vehicle = vehicles[vehicleId] ?: return emptyList()
+        if (!vehicle.connected) return emptyList()
+
+        // TODO: Actually read DTCs from ELM327
+        // NOT_IMPLEMENTED: No real OBD2 adapter connected
+        return emptyList()
     }
 
     /**
      * Clear diagnostic trouble codes.
+     * Returns false if not connected.
      */
     suspend fun clearDTCs(vehicleId: String): Boolean {
-        // TODO: Send clear command to OBD2
-        return true
+        val vehicle = vehicles[vehicleId] ?: return false
+        if (!vehicle.connected) return false
+
+        // TODO: Send clear command to ELM327
+        // NOT_IMPLEMENTED: No real OBD2 adapter connected
+        return false
     }
 
     /**

@@ -283,8 +283,6 @@ class SignalLabViewModel(application: Application) : AndroidViewModel(applicatio
             val audioConfig = AudioOutputConfig(sampleRate = s.sampleRate)
             val backend = com.supremecorp.bass.audio.backend.AndroidAudioTrackBackend()
             val dspChain = com.supremecorp.bass.dsp.AudioDSPChain()
-            val limiter = com.supremecorp.bass.dsp.Limiter(ceiling = 0.95f)
-            val buffer = FloatArray(1024)
 
             // Configure DSP with current settings
             dspChain.configure(s.sampleRate)
@@ -305,16 +303,24 @@ class SignalLabViewModel(application: Application) : AndroidViewModel(applicatio
                 return@launch
             }
 
-            AppLogger.i("SignalLabViewModel", "Sweep started: ${plan.startHz}-${plan.endHz}Hz, ${plan.steps} steps")
+            val channelCount = audioConfig.channelCount
+            val bufferFrames = 1024
+            val buffer = FloatArray(bufferFrames * channelCount)
+
+            AppLogger.i("SignalLabViewModel", "Sweep started: ${plan.startHz}-${plan.endHz}Hz, ${plan.steps} steps, ${channelCount}ch")
 
             while (true) {
-                val sweepState = sweepEngine.render(buffer, 1024, s.sampleRate)
+                val sweepState = sweepEngine.render(buffer, bufferFrames, s.sampleRate)
 
-                // Process through DSP chain (Bass → EQ → Virtualizer → Limiter)
-                dspChain.processStereo(buffer, 1024)
+                // Process through DSP chain — use correct method for channel count
+                if (channelCount == 2) {
+                    dspChain.processStereo(buffer, bufferFrames)
+                } else {
+                    dspChain.processMono(buffer, bufferFrames)
+                }
 
                 // Write to audio backend
-                val writeResult = backend.write(buffer, 1024)
+                val writeResult = backend.write(buffer, bufferFrames)
                 if (writeResult is AudioBackendResult.Failure) {
                     AppLogger.e("SignalLabViewModel", "Write failed during sweep")
                     break
