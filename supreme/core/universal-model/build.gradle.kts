@@ -6,6 +6,8 @@ group = "com.supreme"
 version = "1.0-SNAPSHOT"
 
 dependencies {
+    implementation(project(":core:truth"))
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-core:1.7.3")
     testImplementation(kotlin("test"))
     testImplementation("org.junit.jupiter:junit-jupiter:5.10.1")
 }
