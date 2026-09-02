@@ -50,7 +50,7 @@ class LeakWatchEngineTest {
 
     @Test
     fun `test flow status`() {
-        engine.addSensor(LeakSensor(id = "leak-1", name = "Sensor", location = "Kitchen", protocol = DeviceProtocol.BLE))
+        engine.addSensor(LeakSensor(id = "leak-1", name = "Sensor", location = "Kitchen", protocol = DeviceProtocol.BLE, connected = true))
         engine.addValve(ShutoffValve(id = "valve-1", name = "Main Valve", zone = "kitchen", protocol = DeviceProtocol.MATTER))
         val status = engine.getFlowStatus()
         assertEquals(1, status.activeSensors)

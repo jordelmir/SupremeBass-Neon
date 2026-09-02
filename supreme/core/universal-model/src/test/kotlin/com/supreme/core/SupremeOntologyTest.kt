@@ -94,6 +94,7 @@ class SupremeOntologyTest {
         val obs = Observation(
             id = ObservationId.generate(),
             deviceId = DeviceId("dev-1"),
+            assetId = AssetId("asset-1"),
             sensorType = SensorType.TEMPERATURE,
             timestamp = java.time.Instant.now(),
             readings = mapOf("celsius" to 25.5, "humidity" to 60.0)

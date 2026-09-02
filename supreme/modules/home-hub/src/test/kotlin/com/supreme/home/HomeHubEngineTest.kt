@@ -45,7 +45,7 @@ class HomeHubEngineTest {
         )
         engine.addDevice(device)
         val result = engine.controlDevice("light-1", HomeCommand.TurnOn)
-        assertTrue(result is com.supreme.core.CommandResult.Success)
+        assertTrue(result is CommandResult.Success)
         assertTrue(engine.state.value.devices.first { it.id == "light-1" }.isOn)
     }
 
