@@ -1,7 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <color name="supreme_primary">#FF0061A4</color>
-    <color name="supreme_on_primary">#FFFFFFFF</color>
-    <color name="supreme_background">#FFFDFCFF</color>
-    <color name="supreme_surface">#FFFDFCFF</color>
+    <color name="neon_cyan">#00FFFF</color>
+    <color name="neon_red">#FF073A</color>
+    <color name="radioactive_green">#39FF14</color>
+    <color name="neon_orange">#FF3F00</color>
+    <color name="ultra_violet">#6F00FF</color>
+    <color name="electric_purple">#BF00FF</color>
+    <color name="absolute_black">#000000</color>
+    <color name="carbon_gray">#080808</color>
+    <color name="ghost_white">#E0E0E0</color>
 </resources>

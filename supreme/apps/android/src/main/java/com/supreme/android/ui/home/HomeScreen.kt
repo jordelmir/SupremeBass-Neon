@@ -1,5 +1,6 @@
 package com.supreme.android.ui.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.*
@@ -9,11 +10,14 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.supreme.android.ui.theme.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onNavigateToFix: () -> Unit,
@@ -28,17 +32,12 @@ fun HomeScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(TitanColors.AbsoluteBlack)
             .padding(16.dp)
     ) {
-        Text(
-            text = "Supreme",
-            style = MaterialTheme.typography.headlineLarge,
-            fontWeight = FontWeight.Bold
-        )
-        Text(
-            text = "Everyday Intelligence Platform",
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
+        NeonTitle(
+            text = "SUPREME",
+            subtitle = "Everyday Intelligence Platform"
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -53,69 +52,70 @@ fun HomeScreen(
                     title = "Fix AI",
                     subtitle = "Diagnose problems",
                     icon = Icons.Default.Build,
+                    glowColor = TitanColors.NeonCyan,
                     onClick = onNavigateToFix
                 )
             }
-
             item {
                 ModuleCard(
                     title = "Tools",
                     subtitle = "Network, Noise, Vibration",
                     icon = Icons.Default.Handyman,
+                    glowColor = TitanColors.RadioactiveGreen,
                     onClick = onNavigateToTools
                 )
             }
-
             item {
                 ModuleCard(
                     title = "Assets",
                     subtitle = "Your possessions",
                     icon = Icons.Default.Inventory,
+                    glowColor = TitanColors.NeonOrange,
                     onClick = onNavigateToAssets
                 )
             }
-
             item {
                 ModuleCard(
                     title = "Maintenance",
                     subtitle = "Reminders & schedules",
                     icon = Icons.Default.CalendarMonth,
+                    glowColor = TitanColors.NeonYellow,
                     onClick = onNavigateToMaintenance
                 )
             }
-
             item {
                 ModuleCard(
                     title = "Warranty",
                     subtitle = "Invoices & guarantees",
                     icon = Icons.Default.Description,
+                    glowColor = TitanColors.UltraViolet,
                     onClick = onNavigateToWarranty
                 )
             }
-
             item {
                 ModuleCard(
                     title = "Home",
                     subtitle = "Smart home control",
                     icon = Icons.Default.Home,
+                    glowColor = TitanColors.ElectricPurple,
                     onClick = onNavigateToHomeHub
                 )
             }
-
             item {
                 ModuleCard(
                     title = "Cameras",
                     subtitle = "Camera management",
                     icon = Icons.Default.Videocam,
+                    glowColor = TitanColors.ElectricBlue,
                     onClick = onNavigateToCameraHub
                 )
             }
-
             item {
                 ModuleCard(
                     title = "Find",
                     subtitle = "Locate objects",
                     icon = Icons.Default.LocationSearching,
+                    glowColor = TitanColors.NeonRed,
                     onClick = onNavigateToFind
                 )
             }
@@ -128,15 +128,13 @@ fun ModuleCard(
     title: String,
     subtitle: String,
     icon: ImageVector,
+    glowColor: Color = TitanColors.NeonCyan,
     onClick: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
-        )
+    NeonCard(
+        glowColor = glowColor,
+        onClick = onClick,
+        modifier = Modifier.fillMaxWidth()
     ) {
         Column(
             modifier = Modifier
@@ -148,18 +146,19 @@ fun ModuleCard(
                 imageVector = icon,
                 contentDescription = title,
                 modifier = Modifier.size(32.dp),
-                tint = MaterialTheme.colorScheme.primary
+                tint = glowColor
             )
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = title,
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold
+                fontWeight = FontWeight.Bold,
+                color = TitanColors.GhostWhite
             )
             Text(
                 text = subtitle,
                 style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = TitanColors.GhostWhite.copy(alpha = 0.5f)
             )
         }
     }
@@ -175,69 +174,45 @@ fun ToolsHubScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(TitanColors.AbsoluteBlack)
             .padding(16.dp)
     ) {
-        Text(
-            text = "Tools",
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
+        NeonTitle(text = "Tools", subtitle = "Diagnostic instruments")
         Spacer(modifier = Modifier.height(16.dp))
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onNavigateToNetwork)
-        ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Default.Wifi, contentDescription = null, modifier = Modifier.size(32.dp))
+        NeonCard(glowColor = TitanColors.RadioactiveGreen, onClick = onNavigateToNetwork) {
+            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Wifi, contentDescription = null, modifier = Modifier.size(32.dp), tint = TitanColors.RadioactiveGreen)
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
-                    Text("Network Doctor", fontWeight = FontWeight.Bold)
-                    Text("Diagnose Wi-Fi and Internet issues")
+                    Text("Network Doctor", fontWeight = FontWeight.Bold, color = TitanColors.GhostWhite)
+                    Text("Diagnose Wi-Fi and Internet issues", color = TitanColors.GhostWhite.copy(alpha = 0.6f), fontSize = 12.sp)
                 }
             }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onNavigateToNoise)
-        ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Default.MusicNote, contentDescription = null, modifier = Modifier.size(32.dp))
+        NeonCard(glowColor = TitanColors.NeonYellow, onClick = onNavigateToNoise) {
+            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.MusicNote, contentDescription = null, modifier = Modifier.size(32.dp), tint = TitanColors.NeonYellow)
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
-                    Text("Noise Doctor", fontWeight = FontWeight.Bold)
-                    Text("Analyze sounds and diagnose issues")
+                    Text("Noise Doctor", fontWeight = FontWeight.Bold, color = TitanColors.GhostWhite)
+                    Text("Analyze sounds and diagnose issues", color = TitanColors.GhostWhite.copy(alpha = 0.6f), fontSize = 12.sp)
                 }
             }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Card(
-            modifier = Modifier
-                .fillMaxWidth()
-                .clickable(onClick = onNavigateToVibration)
-        ) {
-            Row(
-                modifier = Modifier.padding(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                Icon(Icons.Default.Speed, contentDescription = null, modifier = Modifier.size(32.dp))
+        NeonCard(glowColor = TitanColors.NeonOrange, onClick = onNavigateToVibration) {
+            Row(modifier = Modifier.padding(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Icon(Icons.Default.Speed, contentDescription = null, modifier = Modifier.size(32.dp), tint = TitanColors.NeonOrange)
                 Spacer(modifier = Modifier.width(16.dp))
                 Column {
-                    Text("Vibration Doctor", fontWeight = FontWeight.Bold)
-                    Text("Measure equipment vibration")
+                    Text("Vibration Doctor", fontWeight = FontWeight.Bold, color = TitanColors.GhostWhite)
+                    Text("Measure equipment vibration", color = TitanColors.GhostWhite.copy(alpha = 0.6f), fontSize = 12.sp)
                 }
             }
         }

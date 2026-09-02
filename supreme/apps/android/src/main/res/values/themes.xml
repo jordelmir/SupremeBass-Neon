@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <style name="Theme.Supreme" parent="android:Theme.Material.Light.NoActionBar">
-        <item name="android:statusBarColor">@color/supreme_primary</item>
-        <item name="android:navigationBarColor">@color/supreme_background</item>
+    <style name="Theme.SupremeBass" parent="android:Theme.Material.NoActionBar">
+        <item name="android:statusBarColor">@color/absolute_black</item>
+        <item name="android:navigationBarColor">@color/carbon_gray</item>
+        <item name="android:windowBackground">@color/absolute_black</item>
     </style>
 </resources>

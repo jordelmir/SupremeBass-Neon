@@ -9,13 +9,10 @@ import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.navigation.NavType
+import androidx.compose.ui.unit.dp
 import androidx.navigation.compose.*
-import androidx.navigation.navArgument
 import com.supreme.android.navigation.SupremeNavGraph
-import com.supreme.android.ui.theme.SupremeTheme
-import com.supreme.android.viewmodel.SupremeViewModelFactory
+import com.supreme.android.ui.theme.*
 
 class SupremeActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,46 +33,69 @@ fun SupremeApp() {
     val currentRoute = navBackStackEntry?.destination?.route
 
     Scaffold(
+        containerColor = TitanColors.AbsoluteBlack,
         topBar = {
             TopAppBar(
-                title = { Text("Supreme") },
+                title = {
+                    Text(
+                        "SUPREME",
+                        color = TitanColors.NeonCyan
+                    )
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    containerColor = TitanColors.AbsoluteBlack
                 )
             )
         },
         bottomBar = {
-            NavigationBar {
+            NavigationBar(
+                containerColor = TitanColors.CarbonGray,
+                contentColor = TitanColors.NeonCyan
+            ) {
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Home") },
-                    label = { Text("Home") },
+                    icon = { Icon(Icons.Default.Home, contentDescription = "Home", tint = if (currentRoute == "home") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
+                    label = { Text("Home", color = if (currentRoute == "home") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
                     selected = currentRoute == "home",
-                    onClick = { navController.navigate("home") }
+                    onClick = { navController.navigate("home") },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = TitanColors.NeonCyan.copy(alpha = 0.1f)
+                    )
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Build, contentDescription = "Fix") },
-                    label = { Text("Fix") },
+                    icon = { Icon(Icons.Default.Build, contentDescription = "Fix", tint = if (currentRoute == "fix") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
+                    label = { Text("Fix", color = if (currentRoute == "fix") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
                     selected = currentRoute == "fix",
-                    onClick = { navController.navigate("fix") }
+                    onClick = { navController.navigate("fix") },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = TitanColors.NeonCyan.copy(alpha = 0.1f)
+                    )
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Handyman, contentDescription = "Tools") },
-                    label = { Text("Tools") },
+                    icon = { Icon(Icons.Default.Handyman, contentDescription = "Tools", tint = if (currentRoute?.startsWith("tools") == true) TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
+                    label = { Text("Tools", color = if (currentRoute?.startsWith("tools") == true) TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
                     selected = currentRoute?.startsWith("tools") == true,
-                    onClick = { navController.navigate("tools") }
+                    onClick = { navController.navigate("tools") },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = TitanColors.NeonCyan.copy(alpha = 0.1f)
+                    )
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Inventory, contentDescription = "Assets") },
-                    label = { Text("Assets") },
+                    icon = { Icon(Icons.Default.Inventory, contentDescription = "Assets", tint = if (currentRoute == "assets") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
+                    label = { Text("Assets", color = if (currentRoute == "assets") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
                     selected = currentRoute == "assets",
-                    onClick = { navController.navigate("assets") }
+                    onClick = { navController.navigate("assets") },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = TitanColors.NeonCyan.copy(alpha = 0.1f)
+                    )
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Settings, contentDescription = "Settings") },
-                    label = { Text("Settings") },
+                    icon = { Icon(Icons.Default.Settings, contentDescription = "Settings", tint = if (currentRoute == "settings") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
+                    label = { Text("Settings", color = if (currentRoute == "settings") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
                     selected = currentRoute == "settings",
-                    onClick = { navController.navigate("settings") }
+                    onClick = { navController.navigate("settings") },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = TitanColors.NeonCyan.copy(alpha = 0.1f)
+                    )
                 )
             }
         }

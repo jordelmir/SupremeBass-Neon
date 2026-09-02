@@ -1,5 +1,6 @@
 package com.supreme.android.ui.warranty
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -11,12 +12,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.supreme.android.ui.theme.*
 import com.supreme.android.viewmodel.WarrantyViewModel
 import java.text.SimpleDateFormat
 import java.util.*
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WarrantyScreen(
     onBack: () -> Unit,
@@ -27,24 +29,26 @@ fun WarrantyScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(TitanColors.AbsoluteBlack)
             .padding(16.dp)
     ) {
-        Text("Warranty Vault", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        Text("Scan invoices and warranty cards", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        NeonTitle(text = "Warranty Vault", subtitle = "Scan invoices and warranty cards")
         Spacer(modifier = Modifier.height(24.dp))
 
-        Button(onClick = { /* TODO: Scan document */ }, modifier = Modifier.fillMaxWidth()) {
-            Icon(Icons.Default.CameraAlt, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Scan Document")
-        }
+        NeonButton(
+            onClick = { /* TODO: Scan document */ },
+            text = "Scan Document",
+            icon = Icons.Default.CameraAlt,
+            modifier = Modifier.fillMaxWidth(),
+            color = TitanColors.UltraViolet
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         if (uiState.warranties.isNotEmpty()) {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(uiState.warranties) { warranty ->
-                    Card(modifier = Modifier.fillMaxWidth()) {
+                    NeonCard(glowColor = if (warranty.isActive) TitanColors.RadioactiveGreen else TitanColors.NeonRed) {
                         Row(
                             modifier = Modifier.padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically
@@ -52,22 +56,22 @@ fun WarrantyScreen(
                             Icon(
                                 if (warranty.isActive) Icons.Default.CheckCircle else Icons.Default.Warning,
                                 contentDescription = null,
-                                tint = if (warranty.isActive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.error
+                                tint = if (warranty.isActive) TitanColors.RadioactiveGreen else TitanColors.NeonRed
                             )
                             Spacer(modifier = Modifier.width(16.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(warranty.assetId, fontWeight = FontWeight.Bold)
-                                Text("Provider: ${warranty.provider}", style = MaterialTheme.typography.bodySmall)
-                                Text("Expires: ${SimpleDateFormat("dd MMM yyyy", Locale.US).format(Date(warranty.warrantyEnd))}", style = MaterialTheme.typography.bodySmall)
+                                Text(warranty.assetId, fontWeight = FontWeight.Bold, color = TitanColors.GhostWhite)
+                                Text("Provider: ${warranty.provider}", color = TitanColors.GhostWhite.copy(alpha = 0.6f), fontSize = 12.sp)
+                                Text("Expires: ${SimpleDateFormat("dd MMM yyyy", Locale.US).format(Date(warranty.warrantyEnd))}", color = TitanColors.GhostWhite.copy(alpha = 0.5f), fontSize = 11.sp)
                             }
                         }
                     }
                 }
             }
         } else {
-            Card(modifier = Modifier.fillMaxWidth()) {
+            NeonCard(glowColor = TitanColors.UltraViolet) {
                 Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                    Text("No warranties tracked yet", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("No warranties tracked yet", color = TitanColors.GhostWhite.copy(alpha = 0.5f))
                 }
             }
         }

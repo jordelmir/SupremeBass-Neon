@@ -2,6 +2,7 @@ package com.supreme.android.ui.vibration
 
 import android.Manifest
 import android.content.pm.PackageManager
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -12,13 +13,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.supreme.android.permissions.PermissionHelper
-import com.supreme.android.permissions.RequestPermissionEffect
+import com.supreme.android.ui.theme.*
 import com.supreme.android.viewmodel.VibrationViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun VibrationScreen(
     onBack: () -> Unit,
@@ -29,33 +29,33 @@ fun VibrationScreen(
     var hasPermission by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        hasPermission = ContextCompat.checkSelfPermission(context, Manifest.permission.HIGH_SAMPLING_RATE_SENSORS) == PackageManager.PERMISSION_GRANTED
+        hasPermission = ContextCompat.checkSelfPermission(
+            context,
+            Manifest.permission.HIGH_SAMPLING_RATE_SENSORS
+        ) == PackageManager.PERMISSION_GRANTED
     }
 
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(TitanColors.AbsoluteBlack)
             .padding(16.dp)
     ) {
-        Text("Vibration Doctor", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        Text("Place phone on equipment to measure vibration", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        NeonTitle(text = "Vibration Doctor", subtitle = "Place phone on equipment to measure vibration")
         Spacer(modifier = Modifier.height(24.dp))
 
-        Card(
-            modifier = Modifier.fillMaxWidth(),
-            colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant)
-        ) {
+        NeonCard(glowColor = TitanColors.NeonOrange) {
             Column(modifier = Modifier.padding(16.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Icon(Icons.Default.PhoneAndroid, contentDescription = null, modifier = Modifier.size(48.dp))
+                Icon(Icons.Default.PhoneAndroid, contentDescription = null, modifier = Modifier.size(48.dp), tint = TitanColors.NeonOrange)
                 Spacer(modifier = Modifier.height(8.dp))
-                Text("Place phone flat on the machine", fontWeight = FontWeight.Bold)
-                Text("Keep still during recording", style = MaterialTheme.typography.bodySmall)
+                Text("Place phone flat on the machine", fontWeight = FontWeight.Bold, color = TitanColors.GhostWhite)
+                Text("Keep still during recording", color = TitanColors.GhostWhite.copy(alpha = 0.6f), fontSize = 12.sp)
             }
         }
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        Button(
+        NeonButton(
             onClick = {
                 if (uiState.isRecording) {
                     viewModel.stopRecording(FloatArray(0), FloatArray(0), FloatArray(0))
@@ -63,33 +63,31 @@ fun VibrationScreen(
                     viewModel.startRecording()
                 }
             },
+            text = if (uiState.isRecording) "Stop" else "Record 10 seconds",
+            icon = if (uiState.isRecording) Icons.Default.Stop else Icons.Default.PlayArrow,
             modifier = Modifier.fillMaxWidth(),
-            colors = if (uiState.isRecording) ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error) else ButtonDefaults.buttonColors()
-        ) {
-            Icon(if (uiState.isRecording) Icons.Default.Stop else Icons.Default.PlayArrow, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(if (uiState.isRecording) "Stop" else "Record 10 seconds")
-        }
+            color = if (uiState.isRecording) TitanColors.NeonRed else TitanColors.NeonOrange
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         if (uiState.baselineComparison.isNotEmpty()) {
-            Card(modifier = Modifier.fillMaxWidth()) {
+            NeonCard(glowColor = TitanColors.NeonOrange) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Vibration Analysis", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+                    Text("Vibration Analysis", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold, color = TitanColors.NeonOrange)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("RMS X: ${String.format("%.3f", uiState.rmsX)} g", style = MaterialTheme.typography.bodyMedium)
-                    Text("RMS Y: ${String.format("%.3f", uiState.rmsY)} g", style = MaterialTheme.typography.bodyMedium)
-                    Text("RMS Z: ${String.format("%.3f", uiState.rmsZ)} g", style = MaterialTheme.typography.bodyMedium)
-                    Text("Total RMS: ${String.format("%.3f", uiState.totalRMS)} g", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.Bold)
-                    Text("Dominant: ${uiState.dominantFrequency.toInt()} Hz", style = MaterialTheme.typography.bodyMedium)
+                    Text("RMS X: ${String.format("%.3f", uiState.rmsX)} g", color = TitanColors.GhostWhite)
+                    Text("RMS Y: ${String.format("%.3f", uiState.rmsY)} g", color = TitanColors.GhostWhite)
+                    Text("RMS Z: ${String.format("%.3f", uiState.rmsZ)} g", color = TitanColors.GhostWhite)
+                    Text("Total RMS: ${String.format("%.3f", uiState.totalRMS)} g", fontWeight = FontWeight.Bold, color = TitanColors.NeonCyan)
+                    Text("Dominant: ${uiState.dominantFrequency.toInt()} Hz", color = TitanColors.GhostWhite)
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text("Baseline: ${uiState.baselineComparison}", style = MaterialTheme.typography.bodyMedium)
+                    Text("Baseline: ${uiState.baselineComparison}", color = TitanColors.GhostWhite.copy(alpha = 0.7f))
                     if (uiState.suggestions.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(12.dp))
-                        Text("Recommendations", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+                        Text("Recommendations", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = TitanColors.RadioactiveGreen)
                         uiState.suggestions.forEach { rec ->
-                            Text("• $rec", style = MaterialTheme.typography.bodyMedium)
+                            Text("• $rec", color = TitanColors.GhostWhite.copy(alpha = 0.8f), fontSize = 13.sp)
                         }
                     }
                 }

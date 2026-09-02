@@ -2,6 +2,7 @@ package com.supreme.android.ui.find
 
 import android.Manifest
 import android.os.Build
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -13,28 +14,17 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.supreme.android.permissions.PermissionHelper
 import com.supreme.android.permissions.RequestMultiplePermissionsEffect
+import com.supreme.android.ui.theme.*
 
-data class TrackedObject(
-    val name: String,
-    val lastSeen: String,
-    val signal: String
-)
+data class TrackedObject(val name: String, val lastSeen: String, val signal: String)
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun FindScreen(onBack: () -> Unit) {
     val bluetoothPermissions = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-        arrayOf(
-            Manifest.permission.BLUETOOTH_SCAN,
-            Manifest.permission.BLUETOOTH_CONNECT
-        )
+        arrayOf(Manifest.permission.BLUETOOTH_SCAN, Manifest.permission.BLUETOOTH_CONNECT)
     } else {
-        arrayOf(
-            Manifest.permission.BLUETOOTH,
-            Manifest.permission.ACCESS_FINE_LOCATION
-        )
+        arrayOf(Manifest.permission.BLUETOOTH, Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
     var hasPermissions by remember { mutableStateOf(false) }
@@ -53,44 +43,46 @@ fun FindScreen(onBack: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(TitanColors.AbsoluteBlack)
             .padding(16.dp)
     ) {
-        Text("Find", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        Text("Locate your objects", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        NeonTitle(text = "Find", subtitle = "Locate your objects")
         Spacer(modifier = Modifier.height(24.dp))
 
         if (!hasPermissions) {
-            Card(modifier = Modifier.fillMaxWidth(), colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.errorContainer)) {
+            NeonCard(glowColor = TitanColors.NeonRed) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("Permission Required", fontWeight = FontWeight.Bold, color = MaterialTheme.colorScheme.onErrorContainer)
-                    Text("Bluetooth permission is needed to scan for objects", color = MaterialTheme.colorScheme.onErrorContainer)
+                    Text("Permission Required", fontWeight = FontWeight.Bold, color = TitanColors.NeonRed)
+                    Text("Bluetooth permission is needed to scan for objects", color = TitanColors.GhostWhite.copy(alpha = 0.6f))
                 }
             }
             return
         }
 
-        Button(onClick = { /* TODO: Scan for BLE tags */ }, modifier = Modifier.fillMaxWidth()) {
-            Icon(Icons.Default.Search, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Scan for Objects")
-        }
+        NeonButton(
+            onClick = { /* TODO: Scan for BLE tags */ },
+            text = "Scan for Objects",
+            icon = Icons.Default.Search,
+            modifier = Modifier.fillMaxWidth(),
+            color = TitanColors.NeonRed
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
             items(objects) { obj ->
-                Card(modifier = Modifier.fillMaxWidth()) {
+                NeonCard(glowColor = TitanColors.NeonRed) {
                     Row(
                         modifier = Modifier.padding(16.dp),
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(Icons.Default.LocationOn, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                        Icon(Icons.Default.LocationOn, contentDescription = null, tint = TitanColors.NeonRed)
                         Spacer(modifier = Modifier.width(16.dp))
                         Column(modifier = Modifier.weight(1f)) {
-                            Text(obj.name, fontWeight = FontWeight.Bold)
-                            Text("Last seen: ${obj.lastSeen}", style = MaterialTheme.typography.bodySmall)
+                            Text(obj.name, fontWeight = FontWeight.Bold, color = TitanColors.GhostWhite)
+                            Text("Last seen: ${obj.lastSeen}", color = TitanColors.GhostWhite.copy(alpha = 0.6f))
                         }
-                        Text(obj.signal, style = MaterialTheme.typography.bodySmall, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                        Text(obj.signal, color = TitanColors.GhostWhite.copy(alpha = 0.5f))
                     }
                 }
             }

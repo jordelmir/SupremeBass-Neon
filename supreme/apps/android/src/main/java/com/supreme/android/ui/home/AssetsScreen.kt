@@ -1,5 +1,6 @@
 package com.supreme.android.ui.home
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,10 +13,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.supreme.android.ui.theme.*
 import com.supreme.android.viewmodel.AssetsViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AssetsScreen(
     onNavigateToAsset: (String) -> Unit,
@@ -27,55 +29,55 @@ fun AssetsScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(TitanColors.AbsoluteBlack)
             .padding(16.dp)
     ) {
-        Text("Assets", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        Text("Track everything you own", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        NeonTitle(text = "Assets", subtitle = "Track everything you own")
         Spacer(modifier = Modifier.height(24.dp))
 
-        Button(onClick = { /* TODO: Add asset */ }, modifier = Modifier.fillMaxWidth()) {
-            Icon(Icons.Default.Add, contentDescription = null)
-            Spacer(modifier = Modifier.width(8.dp))
-            Text("Add Asset")
-        }
+        NeonButton(
+            onClick = { /* TODO: Add asset */ },
+            text = "Add Asset",
+            icon = Icons.Default.Add,
+            modifier = Modifier.fillMaxWidth(),
+            color = TitanColors.NeonOrange
+        )
 
         Spacer(modifier = Modifier.height(16.dp))
 
         if (uiState.assets.isNotEmpty()) {
             LazyColumn(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 items(uiState.assets) { asset ->
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { onNavigateToAsset(asset.id) }
+                    NeonCard(
+                        glowColor = TitanColors.NeonOrange,
+                        onClick = { onNavigateToAsset(asset.id) }
                     ) {
                         Row(
                             modifier = Modifier.padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Icon(Icons.Default.Inventory, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
+                            Icon(Icons.Default.Inventory, contentDescription = null, tint = TitanColors.NeonOrange)
                             Spacer(modifier = Modifier.width(16.dp))
                             Column(modifier = Modifier.weight(1f)) {
-                                Text(asset.name, fontWeight = FontWeight.Bold)
-                                Text(asset.category, style = MaterialTheme.typography.bodySmall)
-                                asset.brand?.let { Text("Brand: $it", style = MaterialTheme.typography.bodySmall) }
+                                Text(asset.name, fontWeight = FontWeight.Bold, color = TitanColors.GhostWhite)
+                                Text(asset.category, fontSize = 12.sp, color = TitanColors.GhostWhite.copy(alpha = 0.6f))
+                                asset.brand?.let { Text("Brand: $it", fontSize = 12.sp, color = TitanColors.GhostWhite.copy(alpha = 0.5f)) }
                             }
-                            Icon(Icons.Default.ChevronRight, contentDescription = null)
+                            Icon(Icons.Default.ChevronRight, contentDescription = null, tint = TitanColors.NeonOrange)
                         }
                     }
                 }
             }
         } else {
-            Card(modifier = Modifier.fillMaxWidth()) {
+            NeonCard(glowColor = TitanColors.NeonOrange) {
                 Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                    Text("No assets added yet", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    Text("No assets added yet", color = TitanColors.GhostWhite.copy(alpha = 0.5f))
                 }
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AssetDetailScreen(
     assetId: String,
@@ -84,32 +86,32 @@ fun AssetDetailScreen(
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(TitanColors.AbsoluteBlack)
             .padding(16.dp)
     ) {
-        Text("Asset Detail", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
-        Text("Asset ID: $assetId", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        NeonTitle(text = "Asset Detail", subtitle = "ID: $assetId")
         Spacer(modifier = Modifier.height(24.dp))
-        Card(modifier = Modifier.fillMaxWidth()) {
+        NeonCard(glowColor = TitanColors.NeonCyan) {
             Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                Text("Asset details coming soon", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Asset details coming soon", color = TitanColors.GhostWhite.copy(alpha = 0.5f))
             }
         }
     }
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(onBack: () -> Unit) {
     Column(
         modifier = Modifier
             .fillMaxSize()
+            .background(TitanColors.AbsoluteBlack)
             .padding(16.dp)
     ) {
-        Text("Settings", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        NeonTitle(text = "Settings", subtitle = "Configure Supreme")
         Spacer(modifier = Modifier.height(24.dp))
-        Card(modifier = Modifier.fillMaxWidth()) {
+        NeonCard(glowColor = TitanColors.NeonCyan) {
             Box(modifier = Modifier.fillMaxWidth().padding(32.dp), contentAlignment = Alignment.Center) {
-                Text("Settings coming soon", color = MaterialTheme.colorScheme.onSurfaceVariant)
+                Text("Settings coming soon", color = TitanColors.GhostWhite.copy(alpha = 0.5f))
             }
         }
     }
