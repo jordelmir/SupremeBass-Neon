@@ -35,6 +35,11 @@ class AcousticSafetyController {
     }
 
     fun validateConfig(config: SignalConfig): SafetyCheckResult {
+        // FAIL-CLOSED: UNKNOWN route must be blocked — cannot verify output path
+        if (routeInterlockEnabled && currentRoute == OutputRoute.UNKNOWN) {
+            return SafetyCheckResult.Blocked("UNKNOWN route — output path cannot be verified. BLOCKED until route resolved.")
+        }
+
         if (routeInterlockEnabled &&
             (currentRoute == OutputRoute.WIRED_HEADPHONES ||
             currentRoute == OutputRoute.BLUETOOTH)) {

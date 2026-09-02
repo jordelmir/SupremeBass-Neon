@@ -32,13 +32,14 @@ class VehicleHubEngine {
 
     /**
      * Connect to OBD2 adapter.
+     * NOT_IMPLEMENTED: No real ELM327 transport exists yet.
+     * Returns false — never claims fake success.
      */
     suspend fun connect(vehicleId: String): Boolean {
         val vehicle = vehicles[vehicleId] ?: return false
-        // TODO: Connect to ELM327 via BLE/WiFi
-        vehicles[vehicleId] = vehicle.copy(connected = true)
-        updateState()
-        return true
+        // NOT_IMPLEMENTED: Real BLE/WiFi ELM327 transport required
+        // Do NOT set connected = true without real hardware handshake
+        return false
     }
 
     /**

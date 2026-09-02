@@ -34,7 +34,7 @@ class HomeHubEngineTest {
     }
 
     @Test
-    fun `test control device turn on`() = runBlocking {
+    fun `test control device returns NotImplemented without real hardware`() = runBlocking {
         engine.addRoom(Room(id = "living", name = "Living Room"))
         val device = HomeDevice(
             id = "light-1",
@@ -45,8 +45,10 @@ class HomeHubEngineTest {
         )
         engine.addDevice(device)
         val result = engine.controlDevice("light-1", HomeCommand.TurnOn)
-        assertTrue(result is CommandResult.Success)
-        assertTrue(engine.state.value.devices.first { it.id == "light-1" }.isOn)
+        // NOT_IMPLEMENTED: No real Matter/Google Home transport
+        assertTrue(result is CommandResult.NotImplemented)
+        // Device state should NOT change without real hardware
+        assertFalse(engine.state.value.devices.first { it.id == "light-1" }.isOn)
     }
 
     @Test

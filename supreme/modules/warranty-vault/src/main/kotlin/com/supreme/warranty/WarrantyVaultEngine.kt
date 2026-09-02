@@ -156,12 +156,13 @@ class WarrantyVaultEngine {
     // ─────────────────────────────────────────────────────────────
 
     private fun performOCR(documentBytes: ByteArray): OCRResult {
-        // TODO: Use Google ML Kit Document Scanner
-        // For now, return placeholder
+        // NOT_IMPLEMENTED: No real ML Kit OCR integration exists yet
+        // Do NOT return placeholder text or fake confidence
         return OCRResult(
-            text = "Placeholder OCR text",
-            confidence = 0.85,
-            detectedFields = emptyMap()
+            text = "",
+            confidence = 0.0,
+            detectedFields = emptyMap(),
+            isImplemented = false
         )
     }
 
@@ -240,7 +241,7 @@ class WarrantyVaultEngine {
     ): WarrantyInfo? {
         val purchaseDate = fields["date"]?.let { parseDate(it) } ?: return null
         val price = fields["price"]?.replace(",", "")?.toDoubleOrNull() ?: 0.0
-        val warrantyMonths = fields["warranty_months"]?.toIntOrNull() ?: 24
+        val warrantyMonths = fields["warranty_months"]?.toIntOrNull() ?: return null // Do NOT default to 24 months
 
         val warrantyStart = purchaseDate
         val warrantyEnd = purchaseDate.plus(warrantyMonths.toLong() * 30, ChronoUnit.DAYS)
@@ -260,12 +261,9 @@ class WarrantyVaultEngine {
     }
 
     private fun parseDate(dateString: String): Instant? {
-        // Simple date parsing; in production use proper date library
-        return try {
-            Instant.now() // Placeholder
-        } catch (e: Exception) {
-            null
-        }
+        // NOT_IMPLEMENTED: No real date parsing exists yet
+        // Do NOT return Instant.now() as placeholder — that would fabricate dates
+        return null
     }
 }
 
@@ -304,7 +302,8 @@ data class DocumentProcessingResult(
 data class OCRResult(
     val text: String,
     val confidence: Double,
-    val detectedFields: Map<String, String>
+    val detectedFields: Map<String, String>,
+    val isImplemented: Boolean = true
 )
 
 data class WarrantyStatus(

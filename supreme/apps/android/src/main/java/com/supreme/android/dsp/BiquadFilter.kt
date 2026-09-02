@@ -44,9 +44,13 @@ class BiquadFilter {
     private var a1 = 0.0
     private var a2 = 0.0
 
-    // State (Direct Form II Transposed)
-    private var z1 = 0.0
-    private var z2 = 0.0
+    // Per-channel state (Direct Form II Transposed)
+    private data class ChannelState(var z1: Double = 0.0, var z2: Double = 0.0)
+    private val channelStates = mutableMapOf<Int, ChannelState>()
+
+    private fun getState(channel: Int): ChannelState {
+        return channelStates.getOrPut(channel) { ChannelState() }
+    }
 
     fun configure(
         type: Type,
@@ -78,38 +82,51 @@ class BiquadFilter {
     }
 
     fun reset() {
-        z1 = 0.0
-        z2 = 0.0
+        channelStates.clear()
     }
 
     /**
-     * Process a single sample through the filter.
+     * Process a single sample through the filter (channel 0 by default).
      */
-    fun process(input: Double): Double {
-        val output = b0 * input + z1
-        z1 = b1 * input - a1 * output + z2
-        z2 = b2 * input - a2 * output
+    fun process(input: Double, channel: Int = 0): Double {
+        val state = getState(channel)
+        val output = b0 * input + state.z1
+        state.z1 = b1 * input - a1 * output + state.z2
+        state.z2 = b2 * input - a2 * output
         return output
     }
 
     /**
      * Process a buffer of samples (mono, in-place).
      */
-    fun process(buffer: FloatArray, frameCount: Int) {
+    fun process(buffer: FloatArray, frameCount: Int, channel: Int = 0) {
         for (i in 0 until frameCount) {
-            buffer[i] = process(buffer[i].toDouble()).toFloat()
+            buffer[i] = process(buffer[i].toDouble(), channel).toFloat()
         }
     }
 
     /**
      * Process interleaved stereo buffer (in-place).
+     * Uses independent state for L/R channels — no cross-channel contamination.
      */
     fun processStereo(buffer: FloatArray, frameCount: Int) {
         for (i in 0 until frameCount) {
-            val left = process(buffer[i * 2].toDouble()).toFloat()
-            val right = process(buffer[i * 2 + 1].toDouble()).toFloat()
+            val left = process(buffer[i * 2].toDouble(), 0).toFloat()
+            val right = process(buffer[i * 2 + 1].toDouble(), 1).toFloat()
             buffer[i * 2] = left
             buffer[i * 2 + 1] = right
+        }
+    }
+
+    /**
+     * Process multi-channel buffer (in-place).
+     */
+    fun processMultiChannel(buffer: FloatArray, frameCount: Int, channelCount: Int) {
+        for (i in 0 until frameCount) {
+            for (ch in 0 until channelCount) {
+                val idx = i * channelCount + ch
+                buffer[idx] = process(buffer[idx].toDouble(), ch).toFloat()
+            }
         }
     }
 

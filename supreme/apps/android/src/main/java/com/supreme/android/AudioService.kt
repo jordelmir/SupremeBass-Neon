@@ -16,6 +16,7 @@ class AudioService : Service() {
         const val TAG = "SupremeBass_Service"
         const val NOTIFICATION_ID = 1
         const val CHANNEL_ID = "SupremeBassChannel"
+        const val ACTION_STOP = "STOP"
     }
 
     private var audioEngine: LegacyEffectsEngine? = null
@@ -32,6 +33,17 @@ class AudioService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // Handle STOP action from notification
+        if (intent?.action == ACTION_STOP) {
+            Log.i(TAG, "STOP action received — stopping service")
+            audioEngine?.stopSession()
+            audioEngine = null
+            releaseWakeLock()
+            stopForeground(STOP_FOREGROUND_REMOVE)
+            stopSelf()
+            return START_NOT_STICKY
+        }
+
         val isRestart = intent == null
 
         val gain: Int

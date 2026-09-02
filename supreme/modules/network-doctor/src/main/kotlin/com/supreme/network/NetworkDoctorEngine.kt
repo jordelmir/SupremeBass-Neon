@@ -206,10 +206,13 @@ class NetworkDoctorEngine {
         val failed = checks.filter { it.status == CheckStatus.FAILED }
         val warnings = checks.filter { it.status == CheckStatus.WARNING }
         val passed = checks.filter { it.status == CheckStatus.PASSED }
+        val unknown = checks.filter { it.status == CheckStatus.UNKNOWN }
 
         val overallStatus = when {
             failed.isNotEmpty() -> DiagnosisStatus.ISSUES_FOUND
             warnings.isNotEmpty() -> DiagnosisStatus.SUBOPTIMAL
+            unknown.size == checks.size -> DiagnosisStatus.NO_DATA
+            unknown.isNotEmpty() && passed.isEmpty() -> DiagnosisStatus.NO_DATA
             else -> DiagnosisStatus.HEALTHY
         }
 
@@ -217,6 +220,7 @@ class NetworkDoctorEngine {
             DiagnosisStatus.HEALTHY -> "Your internet connection is healthy."
             DiagnosisStatus.SUBOPTIMAL -> "Your connection works but could be improved."
             DiagnosisStatus.ISSUES_FOUND -> "Issues detected that may affect your connection."
+            DiagnosisStatus.NO_DATA -> "NO DATA: No measurements taken. All checks UNKNOWN."
         }
 
         val recommendations = checks.mapNotNull { it.recommendation }
@@ -230,7 +234,7 @@ class NetworkDoctorEngine {
             warnings = warnings,
             passedChecks = passed,
             recommendations = recommendations,
-            score = (passed.size.toDouble() / checks.size * 100).toInt()
+            score = if (unknown.size == checks.size) 0 else (passed.size.toDouble() / checks.size * 100).toInt()
         )
     }
 }
@@ -260,7 +264,8 @@ data class NetworkDiagnosis(
 enum class DiagnosisStatus {
     HEALTHY,
     SUBOPTIMAL,
-    ISSUES_FOUND
+    ISSUES_FOUND,
+    NO_DATA
 }
 
 data class NetworkCheck(

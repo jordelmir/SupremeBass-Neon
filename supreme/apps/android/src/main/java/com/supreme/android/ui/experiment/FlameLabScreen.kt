@@ -206,7 +206,7 @@ fun FlameLabScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Start button
+        // Start button — gated on safety + disclaimer acceptance
         Button(
             onClick = {
                 viewModel.startFrequencyResponseExperiment(
@@ -214,14 +214,15 @@ fun FlameLabScreen(
                     steps = (duration.toIntOrNull() ?: 30),
                     dwellMs = 1000
                 )
-                viewModel.markFlameExperimentCompleted()
+                // Do NOT call markFlameExperimentCompleted() here — that should happen
+                // only after the experiment actually finishes and results are observed
             },
             modifier = Modifier.fillMaxWidth().height(56.dp),
             colors = ButtonDefaults.buttonColors(
-                containerColor = if (safetyState.canStart) TitanColors.NeonOrange else Color.Gray
+                containerColor = if (safetyState.canStart && disclaimerAccepted) TitanColors.NeonOrange else Color.Gray
             ),
             shape = RoundedCornerShape(12.dp),
-            enabled = safetyState.canStart
+            enabled = safetyState.canStart && disclaimerAccepted
         ) {
             Icon(Icons.Default.PlayArrow, contentDescription = null, tint = Color.White)
             Spacer(modifier = Modifier.width(8.dp))
@@ -244,7 +245,7 @@ fun FlameLabScreen(
 @Composable
 fun SafetyStatusCard(state: com.supreme.android.domain.model.FlameSafetyState) {
     val color = if (state.canStart) TitanColors.RadioactiveGreen else Color(0xFFFF1744)
-    val text = if (state.canStart) "SAFE" else "BLOCKED"
+    val text = if (state.canStart) "SOFTWARE CHECKS PASSED" else "BLOCKED"
     val detail = state.violations.joinToString(", ") { it.name.replace("_", " ") }
 
     NeonCard(glowColor = color) {

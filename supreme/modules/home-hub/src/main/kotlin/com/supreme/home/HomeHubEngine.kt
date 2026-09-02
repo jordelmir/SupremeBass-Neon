@@ -44,47 +44,17 @@ class HomeHubEngine {
 
     /**
      * Control a device.
+     * NOT_IMPLEMENTED: No real Matter/Google Home/Zigbee transport exists yet.
+     * All commands return NotImplemented — never claims fake success.
      */
     suspend fun controlDevice(deviceId: String, command: HomeCommand): CommandResult {
         val device = devices[deviceId] ?: return CommandResult.Error("Device not found")
 
-        return when (command) {
-            is HomeCommand.TurnOn -> {
-                devices[deviceId] = device.copy(isOn = true)
-                updateState()
-                CommandResult.Success(mapOf("state" to "on"))
-            }
-            is HomeCommand.TurnOff -> {
-                devices[deviceId] = device.copy(isOn = false)
-                updateState()
-                CommandResult.Success(mapOf("state" to "off"))
-            }
-            is HomeCommand.SetTemperature -> {
-                devices[deviceId] = device.copy(temperature = command.celsius)
-                updateState()
-                CommandResult.Success(mapOf("temperature" to command.celsius))
-            }
-            is HomeCommand.SetBrightness -> {
-                devices[deviceId] = device.copy(brightness = command.percent)
-                updateState()
-                CommandResult.Success(mapOf("brightness" to command.percent))
-            }
-            is HomeCommand.Lock -> {
-                devices[deviceId] = device.copy(isLocked = true)
-                updateState()
-                CommandResult.Success(mapOf("locked" to true))
-            }
-            is HomeCommand.Unlock -> {
-                devices[deviceId] = device.copy(isLocked = false)
-                updateState()
-                CommandResult.Success(mapOf("locked" to false))
-            }
-            is HomeCommand.SetColor -> {
-                devices[deviceId] = device.copy(color = command.hexColor)
-                updateState()
-                CommandResult.Success(mapOf("color" to command.hexColor))
-            }
-        }
+        // NOT_IMPLEMENTED: Real hardware transport required
+        // Do NOT mutate local state as if command succeeded physically
+        return CommandResult.NotImplemented(
+            "No real transport connected. Device: ${device.name}, Command: ${command::class.simpleName}"
+        )
     }
 
     /**
@@ -125,11 +95,13 @@ class HomeHubEngine {
 
     /**
      * Run safety check.
+     * WARNING: This checks ONLY local in-memory state, NOT real physical devices.
+     * Results reflect software state, not physical reality.
      */
     fun runSafetyCheck(): SafetyCheckResult {
         val issues = mutableListOf<SafetyIssue>()
 
-        // Check for dangerous plugs left on
+        // Check for dangerous plugs left on (LOCAL STATE ONLY — not physically verified)
         devices.values.filter {
             it.type == DeviceType.SMART_PLUG && it.isOn && it.isHighRisk
         }.forEach { device ->
@@ -137,12 +109,12 @@ class HomeHubEngine {
                 type = IssueType.HIGH_RISK_PLUG,
                 deviceId = device.id,
                 deviceName = device.name,
-                description = "${device.name} is ON (high-risk device)",
+                description = "${device.name} is marked ON locally (NOT physically verified)",
                 severity = Severity.HIGH
             ))
         }
 
-        // Check for open doors/windows
+        // Check for open doors/windows (LOCAL STATE ONLY)
         devices.values.filter {
             it.type == DeviceType.LOCK && it.isLocked != true
         }.forEach { device ->
@@ -150,16 +122,29 @@ class HomeHubEngine {
                 type = IssueType.DOOR_UNLOCKED,
                 deviceId = device.id,
                 deviceName = device.name,
-                description = "${device.name} is unlocked",
+                description = "${device.name} is marked unlocked locally (NOT physically verified)",
                 severity = Severity.MEDIUM
             ))
+        }
+
+        val hasRealData = devices.values.any {
+            it.protocol in setOf(
+                DeviceProtocol.MATTER, DeviceProtocol.ZIGBEE, DeviceProtocol.Z_WAVE,
+                DeviceProtocol.WIFI, DeviceProtocol.BLE, DeviceProtocol.MODBUS
+            )
         }
 
         return SafetyCheckResult(
             timestamp = Instant.now(),
             issues = issues,
-            isSafe = issues.isEmpty(),
-            summary = if (issues.isEmpty()) "All clear" else "${issues.size} issues found"
+            isSafe = false, // Never claim "safe" without real physical device communication
+            summary = if (!hasRealData) {
+                "NO REAL DATA: No physical devices connected. Safety status UNKNOWN."
+            } else if (issues.isEmpty()) {
+                "Local state OK — but not physically verified"
+            } else {
+                "${issues.size} issues found in local state"
+            }
         )
     }
 
@@ -311,4 +296,5 @@ data class EnergySummary(
 sealed class CommandResult {
     data class Success(val data: Map<String, Any>) : CommandResult()
     data class Error(val message: String) : CommandResult()
+    data class NotImplemented(val detail: String) : CommandResult()
 }

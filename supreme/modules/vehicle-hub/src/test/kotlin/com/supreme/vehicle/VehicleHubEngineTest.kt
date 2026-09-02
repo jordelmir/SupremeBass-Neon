@@ -22,19 +22,23 @@ class VehicleHubEngineTest {
     }
 
     @Test
-    fun `test connect to OBD`() = runBlocking {
+    fun `test connect to OBD returns false when not implemented`() = runBlocking {
         engine.addVehicle(Vehicle(id = "car-1", name = "My Car"))
         val result = engine.connect("car-1")
-        assertTrue(result)
-        assertTrue(engine.state.value.vehicles.first { it.id == "car-1" }.connected)
+        // NOT_IMPLEMENTED: connect() returns false — no real ELM327 transport
+        assertFalse(result)
+        assertFalse(engine.state.value.vehicles.first { it.id == "car-1" }.connected)
     }
 
     @Test
-    fun `test read DTCs`() = runBlocking {
+    fun `test read DTCs when not connected`() = runBlocking {
         engine.addVehicle(Vehicle(id = "car-1", name = "My Car"))
+        // connect() returns false — no real adapter
         engine.connect("car-1")
         val dtcs = engine.readDTCs("car-1")
+        // Should return empty since not actually connected
         assertNotNull(dtcs)
+        assertTrue(dtcs.isEmpty())
     }
 
     @Test

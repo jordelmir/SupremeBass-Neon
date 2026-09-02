@@ -1,5 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <full-backup-content>
-    <include domain="sharedpref" path="." />
-    <include domain="database" path="." />
+    <!-- Only backup non-sensitive app preferences -->
+    <!-- Do NOT backup: emergency data, home device state, vehicle data, warranties, location data -->
+    <include domain="sharedpref" path="audio_state.xml" />
+    <include domain="sharedpref" path="app_settings.xml" />
+    <exclude domain="sharedpref" path="." />
+    <exclude domain="database" path="." />
 </full-backup-content>
