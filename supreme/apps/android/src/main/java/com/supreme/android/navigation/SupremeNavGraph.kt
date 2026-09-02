@@ -21,6 +21,11 @@ import com.supreme.android.ui.warranty.WarrantyScreen
 import com.supreme.android.ui.homehub.HomeHubScreen
 import com.supreme.android.ui.camerahub.CameraHubScreen
 import com.supreme.android.ui.find.FindScreen
+import com.supreme.android.ui.signal.SignalLabScreen
+import com.supreme.android.ui.device.DeviceLabScreen
+import com.supreme.android.ui.experiment.ExperimentLabScreen
+import com.supreme.android.ui.experiment.FlameLabScreen
+import com.supreme.android.ui.cv.VisualLabScreen
 
 @Composable
 fun SupremeNavGraph(
@@ -103,6 +108,26 @@ fun SupremeNavGraph(
 
         composable("find") {
             FindScreen(onBack = { navController.popBackStack() })
+        }
+
+        composable("signal") {
+            SignalLabScreen()
+        }
+
+        composable("device") {
+            DeviceLabScreen()
+        }
+
+        composable("experiment") {
+            ExperimentLabScreen()
+        }
+
+        composable("flame") {
+            FlameLabScreen()
+        }
+
+        composable("visual") {
+            VisualLabScreen()
         }
 
         composable("settings") {

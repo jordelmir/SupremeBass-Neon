@@ -37,10 +37,7 @@ fun SupremeApp() {
         topBar = {
             TopAppBar(
                 title = {
-                    Text(
-                        "SUPREME",
-                        color = TitanColors.NeonCyan
-                    )
+                    Text("SUPREMEBASS", color = TitanColors.NeonCyan)
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = TitanColors.AbsoluteBlack
@@ -54,7 +51,7 @@ fun SupremeApp() {
             ) {
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Home, contentDescription = "Home", tint = if (currentRoute == "home") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
-                    label = { Text("Home", color = if (currentRoute == "home") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
+                    label = { Text("Home") },
                     selected = currentRoute == "home",
                     onClick = { navController.navigate("home") },
                     colors = NavigationBarItemDefaults.colors(
@@ -62,8 +59,17 @@ fun SupremeApp() {
                     )
                 )
                 NavigationBarItem(
+                    icon = { Icon(Icons.Default.Equalizer, contentDescription = "Signal", tint = if (currentRoute == "signal") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
+                    label = { Text("Signal") },
+                    selected = currentRoute == "signal",
+                    onClick = { navController.navigate("signal") },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = TitanColors.NeonCyan.copy(alpha = 0.1f)
+                    )
+                )
+                NavigationBarItem(
                     icon = { Icon(Icons.Default.Build, contentDescription = "Fix", tint = if (currentRoute == "fix") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
-                    label = { Text("Fix", color = if (currentRoute == "fix") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
+                    label = { Text("Fix") },
                     selected = currentRoute == "fix",
                     onClick = { navController.navigate("fix") },
                     colors = NavigationBarItemDefaults.colors(
@@ -71,26 +77,26 @@ fun SupremeApp() {
                     )
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Handyman, contentDescription = "Tools", tint = if (currentRoute?.startsWith("tools") == true) TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
-                    label = { Text("Tools", color = if (currentRoute?.startsWith("tools") == true) TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
-                    selected = currentRoute?.startsWith("tools") == true,
-                    onClick = { navController.navigate("tools") },
+                    icon = { Icon(Icons.Default.Devices, contentDescription = "Device", tint = if (currentRoute == "device") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
+                    label = { Text("Device") },
+                    selected = currentRoute == "device",
+                    onClick = { navController.navigate("device") },
                     colors = NavigationBarItemDefaults.colors(
                         indicatorColor = TitanColors.NeonCyan.copy(alpha = 0.1f)
                     )
                 )
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Inventory, contentDescription = "Assets", tint = if (currentRoute == "assets") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
-                    label = { Text("Assets", color = if (currentRoute == "assets") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
-                    selected = currentRoute == "assets",
-                    onClick = { navController.navigate("assets") },
+                    icon = { Icon(Icons.Default.Science, contentDescription = "Lab", tint = if (currentRoute?.startsWith("experiment") == true || currentRoute == "flame" || currentRoute == "visual") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
+                    label = { Text("Lab") },
+                    selected = currentRoute?.startsWith("experiment") == true || currentRoute == "flame" || currentRoute == "visual",
+                    onClick = { navController.navigate("experiment") },
                     colors = NavigationBarItemDefaults.colors(
                         indicatorColor = TitanColors.NeonCyan.copy(alpha = 0.1f)
                     )
                 )
                 NavigationBarItem(
                     icon = { Icon(Icons.Default.Settings, contentDescription = "Settings", tint = if (currentRoute == "settings") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
-                    label = { Text("Settings", color = if (currentRoute == "settings") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
+                    label = { Text("Settings") },
                     selected = currentRoute == "settings",
                     onClick = { navController.navigate("settings") },
                     colors = NavigationBarItemDefaults.colors(
