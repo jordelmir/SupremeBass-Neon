@@ -59,6 +59,15 @@ fun SupremeApp() {
                     )
                 )
                 NavigationBarItem(
+                    icon = { Icon(Icons.Default.Apps, contentDescription = "Modules", tint = if (currentRoute == "modules" || currentRoute?.startsWith("tools") == true || currentRoute == "assets" || currentRoute == "maintenance" || currentRoute == "warranty" || currentRoute == "homehub" || currentRoute == "camerahub" || currentRoute == "find") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
+                    label = { Text("Modules") },
+                    selected = currentRoute == "modules" || currentRoute?.startsWith("tools") == true || currentRoute == "assets" || currentRoute == "maintenance" || currentRoute == "warranty" || currentRoute == "homehub" || currentRoute == "camerahub" || currentRoute == "find",
+                    onClick = { navController.navigate("modules") },
+                    colors = NavigationBarItemDefaults.colors(
+                        indicatorColor = TitanColors.NeonCyan.copy(alpha = 0.1f)
+                    )
+                )
+                NavigationBarItem(
                     icon = { Icon(Icons.Default.Equalizer, contentDescription = "Signal", tint = if (currentRoute == "signal") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
                     label = { Text("Signal") },
                     selected = currentRoute == "signal",
