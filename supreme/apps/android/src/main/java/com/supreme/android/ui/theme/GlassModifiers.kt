@@ -181,6 +181,69 @@ fun Modifier.breathingGlow(
         }
 }
 
+fun Modifier.reactorGlass(
+    cornerRadius: Dp = 20.dp,
+    glowColor: Color = TitanColors.NeonCyan,
+    alpha: Float = 0.45f,
+    glowRadius: Dp = 12.dp
+): Modifier = composed {
+    val shape = RoundedCornerShape(cornerRadius)
+    val infiniteTransition = rememberInfiniteTransition(label = "reactor_breathe")
+
+    val breatheScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.02f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "reactor_scale"
+    )
+
+    val glowPulse by infiniteTransition.animateFloat(
+        initialValue = glowRadius.value * 0.7f,
+        targetValue = glowRadius.value * 1.6f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "reactor_glow"
+    )
+
+    val borderAlpha by infiniteTransition.animateFloat(
+        initialValue = 0.3f,
+        targetValue = 0.8f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(2000, easing = FastOutSlowInEasing),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "reactor_border"
+    )
+
+    this
+        .scale(breatheScale)
+        .shadow(
+            elevation = glowPulse.dp,
+            shape = shape,
+            spotColor = glowColor.copy(alpha = borderAlpha * 0.6f),
+            ambientColor = glowColor.copy(alpha = borderAlpha * 0.3f),
+            clip = false
+        )
+        .clip(shape)
+        .background(TitanColors.AbsoluteBlack.copy(alpha = alpha))
+        .border(
+            width = 1.2.dp,
+            brush = Brush.verticalGradient(
+                colors = listOf(
+                    glowColor.copy(alpha = borderAlpha),
+                    Color.Transparent,
+                    glowColor.copy(alpha = borderAlpha * 0.5f)
+                )
+            ),
+            shape = shape
+        )
+}
+
 fun Modifier.scanLineOverlay(
     lineColor: Color = TitanColors.NeonCyan,
     duration: Int = 3000

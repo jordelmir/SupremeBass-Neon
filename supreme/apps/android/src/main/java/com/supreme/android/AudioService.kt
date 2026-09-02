@@ -36,7 +36,6 @@ class AudioService : Service() {
 
         val gain: Int
         if (isRestart) {
-            // System restarted us — restore persisted state
             gain = AudioStatePersistence.gainValue(this).toInt()
             val wasEnabled = AudioStatePersistence.isEnabled(this)
             Log.i(TAG, "System restart: enabled=$wasEnabled, gain=$gain")
@@ -52,7 +51,6 @@ class AudioService : Service() {
             Log.i(TAG, "onStartCommand: gain=$gain")
         }
 
-        // Always ensure engine exists (might have been killed by system)
         if (audioEngine == null) {
             Log.w(TAG, "Engine was null — recreating")
             acquireWakeLock()
@@ -60,7 +58,6 @@ class AudioService : Service() {
             audioEngine = LegacyEffectsEngine(this)
         }
 
-        // Always restart session to ensure effects are alive
         audioEngine?.stopSession()
         audioEngine?.startSession()
         audioEngine?.setGain(gain)
@@ -71,7 +68,6 @@ class AudioService : Service() {
 
         Log.i(TAG, "Engine active: gain=$gain")
 
-        // STICKY: system will restart service if killed
         return START_STICKY
     }
 
@@ -84,20 +80,14 @@ class AudioService : Service() {
     }
 
     override fun onTaskRemoved(rootIntent: Intent?) {
-        Log.i(TAG, "onTaskRemoved — stopping service (user closed app)")
-
-        AudioStatePersistence.saveEnabled(this, false)
-        audioEngine?.stopSession()
-        audioEngine = null
-        releaseWakeLock()
-        stopForeground(STOP_FOREGROUND_REMOVE)
-        stopSelf()
-
+        // DO NOT stop service here — keep boost alive in background
+        // The foreground service keeps running even when app is swiped
+        Log.i(TAG, "onTaskRemoved — keeping service alive for background boost")
         super.onTaskRemoved(rootIntent)
     }
 
     override fun onLowMemory() {
-        Log.w(TAG, "onLowMemory — effects may be killed, will auto-recover via health check")
+        Log.w(TAG, "onLowMemory — effects may be killed, will auto-recover via polling")
         super.onLowMemory()
     }
 
@@ -115,7 +105,7 @@ class AudioService : Service() {
                 PowerManager.PARTIAL_WAKE_LOCK,
                 "SupremeAcoustics::AudioService"
             ).apply {
-                acquire(24 * 60 * 60 * 1000L) // 24 hours max
+                acquire(24 * 60 * 60 * 1000L)
             }
             Log.d(TAG, "WakeLock acquired")
         } catch (e: Exception) {
@@ -133,10 +123,10 @@ class AudioService : Service() {
     private fun startForegroundNotification() {
         val channel = NotificationChannel(
             CHANNEL_ID,
-            "Supreme Acoustics Active",
+            "SupremeBass Active",
             NotificationManager.IMPORTANCE_LOW
         ).apply {
-            description = "Shows when audio boost is active"
+            description = "Audio boost is running in background"
             setShowBadge(false)
         }
         getSystemService(NotificationManager::class.java).createNotificationChannel(channel)
@@ -150,7 +140,7 @@ class AudioService : Service() {
         Log.d(TAG, "Foreground notification started")
     }
 
-    private fun updateNotification(gain: Int) {
+    fun updateNotification(gain: Int) {
         try {
             val notification = buildNotification(gain)
             getSystemService(NotificationManager::class.java).notify(NOTIFICATION_ID, notification)
@@ -168,24 +158,33 @@ class AudioService : Service() {
         } else ""
 
         val title = if (gain > 0) {
-            "🔊 ${100 + gain}% boost$duration"
+            "${100 + gain}% boost active$duration"
         } else {
-            "Supreme Acoustics Active"
+            "SupremeBass Active"
         }
 
-        // Open app when notification is tapped
         val openIntent = packageManager.getLaunchIntentForPackage(packageName)
         val pendingIntent = android.app.PendingIntent.getActivity(
             this, 0, openIntent,
             android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
         )
 
+        // Stop action
+        val stopIntent = Intent(this, AudioService::class.java).apply {
+            action = "STOP"
+        }
+        val stopPendingIntent = android.app.PendingIntent.getService(
+            this, 1, stopIntent,
+            android.app.PendingIntent.FLAG_UPDATE_CURRENT or android.app.PendingIntent.FLAG_IMMUTABLE
+        )
+
         return Notification.Builder(this, CHANNEL_ID)
             .setContentTitle(title)
-            .setContentText("Tap to open settings")
+            .setContentText("Boosting all audio — tap to open")
             .setSmallIcon(android.R.drawable.ic_media_play)
             .setOngoing(true)
             .setContentIntent(pendingIntent)
+            .addAction(android.R.drawable.ic_media_pause, "Stop", stopPendingIntent)
             .setForegroundServiceBehavior(Notification.FOREGROUND_SERVICE_IMMEDIATE)
             .build()
     }
