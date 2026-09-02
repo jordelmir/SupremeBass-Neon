@@ -7,6 +7,7 @@ import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
+import com.supreme.android.ui.boost.BoostScreen
 import com.supreme.android.ui.fix.FixScreen
 import com.supreme.android.ui.home.AssetsScreen
 import com.supreme.android.ui.home.AssetDetailScreen
@@ -38,6 +39,10 @@ fun SupremeNavGraph(
         modifier = modifier
     ) {
         composable("home") {
+            BoostScreen()
+        }
+
+        composable("modules") {
             HomeScreen(
                 onNavigateToFix = { navController.navigate("fix") },
                 onNavigateToTools = { navController.navigate("tools") },

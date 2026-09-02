@@ -50,8 +50,8 @@ fun SupremeApp() {
                 contentColor = TitanColors.NeonCyan
             ) {
                 NavigationBarItem(
-                    icon = { Icon(Icons.Default.Home, contentDescription = "Home", tint = if (currentRoute == "home") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
-                    label = { Text("Home") },
+                    icon = { Icon(Icons.Default.VolumeUp, contentDescription = "Boost", tint = if (currentRoute == "home") TitanColors.NeonCyan else TitanColors.GhostWhite.copy(alpha = 0.5f)) },
+                    label = { Text("Boost") },
                     selected = currentRoute == "home",
                     onClick = { navController.navigate("home") },
                     colors = NavigationBarItemDefaults.colors(
